@@ -5,10 +5,12 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Mannote"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
+      Height="450" Width="600"
       Title="Statistic">
 
     <Grid>
-        <TextBlock Text="Statistic page" Foreground="#FF239B4E" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="22" FontStyle="Italic"/>
+        <TextBlock Text="Statistic page" Foreground="#FF239B4E" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="22" FontStyle="Italic"/>
+        <Button x:Name="button" Content="Button" HorizontalAlignment="Center" Margin="0,70,0,0" VerticalAlignment="Center" Width="74" Click="button_Click"/>
+        <ComboBox x:Name="comboBox" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="213"/>
     </Grid>
 </Page>
