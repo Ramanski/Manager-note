@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Data;
 using System.Data.SqlClient;
 using System.Configuration;
+using RailwayConnectedLayer;
 
 namespace Mannote
 {
@@ -16,42 +17,24 @@ namespace Mannote
     /// </summary>
     public partial class Info : Page
     {
-        string connectionString;
-        SqlDataAdapter adapter;
         DataTable uchTable;
 
         public Info()
         {
             InitializeComponent();
-            // получаем строку подключения из app.config
-            connectionString = ConfigurationManager.ConnectionStrings["DBConnection"].ConnectionString;
+        }
+
+        public void RefreshTrainStatus()
+        {
+            RailwayDAL railwayDAL = new RailwayDAL();
+            railwayDAL.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
+            dgTrainStatus.ItemsSource = railwayDAL.GetAllTrainsAsDataTable().DefaultView;
+            railwayDAL.CloseConnection();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            string sql = "SELECT * FROM [dbo].[UCHDGP_1]";
-            uchTable = new DataTable();
-            SqlConnection connection = null;
-            try
-            {
-                connection = new SqlConnection(connectionString);
-                SqlCommand command = new SqlCommand(sql, connection);
-                adapter = new SqlDataAdapter(command);
-
-                connection.Open();
-                adapter.Fill(uchTable);
-                uchGrid.ItemsSource = uchTable.DefaultView;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            finally
-            {
-                if (connection != null)
-                    connection.Close();
-            }
+            RefreshTrainStatus();
         }
-
     }
 }

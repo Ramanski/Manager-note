@@ -18,6 +18,7 @@ namespace Mannote
         Page StatisticPage;
         Page MainPage;
         Page DocumentsPage;
+        Page EditorPage;
 
         public MainWindow()
         {
@@ -47,6 +48,12 @@ namespace Mannote
         private void Main_Click(object sender, RoutedEventArgs e)
         {
             CurrentPage.Content = MainPage;
+        }
+
+        private void ModelEditor_Click(object sender, RoutedEventArgs e)
+        {
+            if (InfoPage == null) EditorPage = new ModelEditor();
+            CurrentPage.Content = EditorPage;
         }
     }
 }

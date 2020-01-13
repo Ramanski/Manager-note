@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using RailwayConnectedLayer;
+using System.Configuration;
 
 namespace Mannote.Pages
 {
@@ -20,9 +22,41 @@ namespace Mannote.Pages
     /// </summary>
     public partial class ModelEditor : Page
     {
+        List<int> stations;
+
         public ModelEditor()
         {
             InitializeComponent();
+            RailwayDAL railwayDAL = new RailwayDAL();
+            railwayDAL.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
+            stations = railwayDAL.GetStations();
+            railwayDAL.CloseConnection();
+            cbDepartureStation.ItemsSource = stations;
+            cbArrivalStation.ItemsSource = stations;
+        }
+
+        private void bProcess_Click(object sender, RoutedEventArgs e)
+        {
+            RailwayDAL railwayDal = new RailwayDAL();
+            railwayDal.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
+            railwayDal.InsertTrain(130007, 130100, 1, 1);
+            railwayDal.CloseConnection();
+        }
+
+        private void bEdit_Click(object sender, RoutedEventArgs e)
+        {
+            RailwayDAL railwayDal = new RailwayDAL();
+            railwayDal.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
+            railwayDal.UpdateOperation(201, 201);
+            railwayDal.CloseConnection();
+        }
+
+        private void bOperate_Click(object sender, RoutedEventArgs e)
+        {
+            RailwayDAL railwayDal = new RailwayDAL();
+            railwayDal.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
+            railwayDal.InsertOperation(101, 200);
+            railwayDal.CloseConnection();
         }
     }
 }

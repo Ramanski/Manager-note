@@ -14,11 +14,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock Text="Info Page" Grid.Row="0" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FFF90505"/>
-        <DataGrid AutoGenerateColumns="False" x:Name="uchGrid" Grid.Row="1" Background="White">
-            <DataGrid.Columns>
-                <DataGridTextColumn Binding="{Binding KUU}" Header="№ участка ДГП" Width= "125"/>
-                <DataGridTextColumn Binding="{Binding NAIMK}" Header="Наименование участка" Width="250"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <DataGrid x:Name="dgTrainStatus" HorizontalAlignment="Left" Height="403" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="780"/>
+
     </Grid>
 </Page>

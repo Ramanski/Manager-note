@@ -9,11 +9,11 @@
       Title="ModelEditor">
 
     <Grid Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="429" Margin="10,7,0,0" Stroke="Black" VerticalAlignment="Top" Width="271"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="433" Margin="10,7,0,0" Stroke="Black" VerticalAlignment="Top" Width="277"/>
         <Label x:Name="lProcessing" Content="Формирование поезда" HorizontalAlignment="Left" Margin="64,11,0,0" VerticalAlignment="Top" Width="138"/>
-        <ComboBox x:Name="cbDepartureStation" HorizontalAlignment="Left" Margin="119,41,0,0" VerticalAlignment="Top" Width="120"/>
+        <ComboBox x:Name="cbDepartureStation" HorizontalAlignment="Left" Margin="119,41,0,0" VerticalAlignment="Top" Width="147"/>
         <Label x:Name="lDeparture" Content="Отправление" HorizontalAlignment="Left" Margin="21,37,0,0" VerticalAlignment="Top"/>
-        <ComboBox x:Name="cbArrivalStation" HorizontalAlignment="Left" Margin="119,70,0,0" VerticalAlignment="Top" Width="120"/>
+        <ComboBox x:Name="cbArrivalStation" HorizontalAlignment="Left" Margin="119,70,0,0" VerticalAlignment="Top" Width="147"/>
         <Label x:Name="lArrival" Content="Прибытие" HorizontalAlignment="Left" Margin="21,66,0,0" VerticalAlignment="Top"/>
         <GroupBox Header="Тип поезда" Margin="21,97,460,298">
             <StackPanel>
@@ -21,23 +21,44 @@
                 <RadioButton x:Name="rbPassType" GroupName="TrainType" Content="Пассажирский" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top"/>
             </StackPanel>
         </GroupBox>
-        <GroupBox Header="Локомотив" HorizontalAlignment="Left" Margin="21,157,0,245" Width="245">
+        <GroupBox Header="Локомотив" HorizontalAlignment="Left" Margin="21,157,0,245" Width="251">
             <Grid>
-                <ComboBox x:Name="cbLocomotive" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Width="223" Grid.ColumnSpan="2"/>
+                <ComboBox x:Name="cbLocomotive" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Width="213"/>
             </Grid>
         </GroupBox>
-        <Label x:Name="lCargo" Content="Наименование груза" HorizontalAlignment="Left" Margin="23,205,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbCargoName" HorizontalAlignment="Left" Height="23" Margin="23,231,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="161"/>
-        <Label x:Name="lTafiff" Content="Тариф" HorizontalAlignment="Left" Margin="202,205,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbTariff" HorizontalAlignment="Left" Height="23" Margin="202,231,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="64"/>
-        <ListBox x:Name="lbCargo" HorizontalAlignment="Left" Height="102" Margin="23,284,0,0" VerticalAlignment="Top" Width="243"/>
-        <Button x:Name="bAddCargo" Content="Добавить" HorizontalAlignment="Left" Margin="110,259,0,0" VerticalAlignment="Top" Width="74"/>
-        <Button x:Name="bProcess" Content="Сформировать" HorizontalAlignment="Center" Margin="95,391,410,0" VerticalAlignment="Top" Width="95" Height="35"/>
+        <GroupBox Header="Грузы" Margin="21,205,319,56">
+            <Grid Margin="10,0,0,0">
+                <Label x:Name="lCargo" Content="Наименование" HorizontalAlignment="Left" Margin="0,-4,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="tbCargoName" HorizontalAlignment="Left" Height="23" Margin="0,18,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="237"/>
+                <Label x:Name="lTafiff" Content="Тариф" HorizontalAlignment="Left" Margin="119,48,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="tbTariff" HorizontalAlignment="Left" Height="23" Margin="169,50,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="68"/>
+                <Label x:Name="lWeight" Content="Вес (т)" HorizontalAlignment="Left" Margin="0,47,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="tbWeight" HorizontalAlignment="Left" Height="23" Margin="48,50,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="52"/>
+                <ListBox x:Name="lbCargo" HorizontalAlignment="Left" Height="85" Margin="0,79,0,0" VerticalAlignment="Top" Width="146"/>
+                <Button x:Name="bAddCargo" Content="Добавить" HorizontalAlignment="Left" Margin="155,80,0,0" VerticalAlignment="Top" Width="82"/>
+                <Button x:Name="bDelCargo" Content="Удалить" HorizontalAlignment="Left" Margin="155,105,0,0" VerticalAlignment="Top" Width="82"/>
+                <Button x:Name="bClearCargo" Content="Очистить" HorizontalAlignment="Left" Margin="155,130,0,0" VerticalAlignment="Top" Width="82"/>
+            </Grid>
+        </GroupBox>
+        <Button x:Name="bProcess" Content="Сформировать" HorizontalAlignment="Center" Margin="95,399,410,0" VerticalAlignment="Top" Width="95" Height="35" Click="bProcess_Click"/>
         <GroupBox Header="Тип тяги" Margin="153,97,328,298">
             <StackPanel>
                 <RadioButton x:Name="rbElectro" GroupName="PowerType" Content="Электровозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" IsChecked="True"/>
                 <RadioButton x:Name="rbFuel" GroupName="PowerType" Content="Тепловозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top"/>
             </StackPanel>
         </GroupBox>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="433" Margin="292,7,0,0" Stroke="Black" VerticalAlignment="Top" Width="298"/>
+        <Label x:Name="lEditor" Content="Редактирование поезда" HorizontalAlignment="Left" Margin="378,11,0,0" VerticalAlignment="Top"/>
+        <ListBox x:Name="lbTrains" HorizontalAlignment="Left" Height="67" Margin="301,42,0,0" VerticalAlignment="Top" Width="111"/>
+        <Button x:Name="bEdit" Content="Корректировка" Click="bEdit_Click" HorizontalAlignment="Left" Margin="312,119,0,0" VerticalAlignment="Top" Width="100"/>
+        <GroupBox x:Name="gbOperation" Header="Операция" HorizontalAlignment="Left" Height="68" Margin="417,41,0,0" VerticalAlignment="Top" Width="157">
+            <WrapPanel>
+                <RadioButton x:Name="rbDepartured" Content="Отправлен" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <RadioButton x:Name="rbArrived" Content="Прибыл" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            </WrapPanel>
+        </GroupBox>
+        <Button x:Name="bAddOperation" Click="bOperate_Click" HorizontalAlignment="Left" Margin="432,119,0,0" VerticalAlignment="Top" Width="75">
+            <TextBlock Text="Произвести операцию" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+        </Button>
     </Grid>
 </Page>

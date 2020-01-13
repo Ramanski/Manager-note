@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Mannote"
         mc:Ignorable="d"
-        Title="Блокнот руководителя" Height="600" Width="800" ResizeMode="NoResize" Background="White" FontSize="16" Icon="Resources/notebook.ico" HorizontalContentAlignment="Center" HorizontalAlignment="Center" WindowStartupLocation="CenterScreen">
+        Title="Блокнот руководителя" Height="600" Width="810" ResizeMode="NoResize" Background="White" FontSize="16" Icon="Resources/notebook.ico" HorizontalContentAlignment="Center" HorizontalAlignment="Center" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style TargetType="{x:Type Hyperlink}">
             <Style.Setters>
@@ -33,10 +33,16 @@
                     <TreeViewItem Header="Витебское отделение"/>
                 </TreeViewItem>
             </TreeView>
+            <TreeView BorderThickness="0">
+                <TreeViewItem Header="Оперативная справка">
+                    <Hyperlink Click="Info_Click">Локомотив</Hyperlink>
+                    <Hyperlink Click="Info_Click">Поезд</Hyperlink>
+                </TreeViewItem>
+            </TreeView>
             <Label><Hyperlink Click="Document_Click">Документы</Hyperlink></Label>
-            <Label><Hyperlink Click="Info_Click">Справка ЖД</Hyperlink></Label>
+            <Label><Hyperlink Click="ModelEditor_Click">Редактор модели</Hyperlink></Label>
             <Label><Hyperlink>О программе</Hyperlink></Label>
         </StackPanel>
-        <Frame x:Name="CurrentPage" NavigationUIVisibility="Hidden" Margin="5" Content="{Binding}"/>
+        <Frame x:Name="CurrentPage" NavigationUIVisibility="Hidden" Margin="5" Width="600" Content="{Binding}"/>
     </DockPanel>
 </Window>
