@@ -14,6 +14,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using RailwayConnectedLayer;
 using System.Configuration;
+using CodeFirst;
+using System.Data.Entity;
 
 namespace Mannote.Pages
 {
@@ -22,41 +24,79 @@ namespace Mannote.Pages
     /// </summary>
     public partial class ModelEditor : Page
     {
-        List<int> stations;
-
         public ModelEditor()
         {
             InitializeComponent();
-            RailwayDAL railwayDAL = new RailwayDAL();
-            railwayDAL.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
-            stations = railwayDAL.GetStations();
-            railwayDAL.CloseConnection();
-            cbDepartureStation.ItemsSource = stations;
-            cbArrivalStation.ItemsSource = stations;
         }
 
-        private void bProcess_Click(object sender, RoutedEventArgs e)
+        private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            RailwayDAL railwayDal = new RailwayDAL();
-            railwayDal.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
-            railwayDal.InsertTrain(130007, 130100, 1, 1);
-            railwayDal.CloseConnection();
-        }
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SampleContext>());
 
-        private void bEdit_Click(object sender, RoutedEventArgs e)
-        {
-            RailwayDAL railwayDal = new RailwayDAL();
-            railwayDal.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
-            railwayDal.UpdateOperation(201, 201);
-            railwayDal.CloseConnection();
-        }
+                      
+            PowerKind powerKind = new PowerKind();
+            powerKind.Name = "На Божьем слове";
 
-        private void bOperate_Click(object sender, RoutedEventArgs e)
-        {
-            RailwayDAL railwayDal = new RailwayDAL();
-            railwayDal.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
-            railwayDal.InsertOperation(101, 200);
-            railwayDal.CloseConnection();
+            TrainType trainType = new TrainType();
+            trainType.Name = "Бомжевоз";
+
+            Code code = new Code();
+            code.Name = "Послан";
+
+            Operation operation = new Operation();
+            operation.Code = code;
+            operation.Date = DateTime.Now.AddDays(-10);
+
+            Station Stot = new Station();
+            Stot.Name = "ОтВерблюда";
+            Stot.Department = 0;
+
+            Station Stnz = new Station();
+            Stnz.Name = "Караганда";
+            Stnz.Department = 6;
+
+            CodeFirst.Path path = new CodeFirst.Path();
+            path.PathId = 3;
+            path.DepartureStation = Stot;
+            path.ArriveStation = Stnz;
+            path.Distance = 999;
+
+            Lokomotive lokomotive = new Lokomotive();
+            lokomotive.Model = "Тапок";
+            lokomotive.PowerKind = powerKind;
+            lokomotive.TrainType = trainType;
+
+            Train train = new Train();
+            train.Lokomotive = lokomotive;
+            train.Path = path;
+            train.Operations = new List<Operation>();
+            train.Operations.Add(operation);
+
+            Cargo cargo = new Cargo();
+            cargo.Name = "Чай з малинавым варэннем";
+            cargo.Weight = 0.5f;
+            cargo.CostToTransport = 50 * path.Distance;
+            train.Cargos = new List<Cargo>();
+            train.Cargos.Add(cargo);
+            
+
+            // Создать объект контекста
+            SampleContext context = new SampleContext();
+
+            // Вставить данные в таблицу Customers с помощью LINQ
+            context.PowerKinds.Add(powerKind);
+            context.TrainTypes.Add(trainType);
+            context.Codes.Add(code);
+            context.Operations.Add(operation);
+            context.Stations.Add(Stot);
+            context.Stations.Add(Stnz);
+            context.Paths.Add(path);
+            context.Lokomotives.Add(lokomotive);
+            context.Cargos.Add(cargo);
+            context.Trains.Add(train);
+
+            // Сохранить изменения в БД
+            context.SaveChanges();
         }
     }
 }

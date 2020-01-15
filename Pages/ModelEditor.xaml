@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:Mannote.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="600"
-      Title="ModelEditor">
+      Title="ModelEditor" Loaded="Page_Loaded">
 
     <Grid Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
         <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="433" Margin="10,7,0,0" Stroke="Black" VerticalAlignment="Top" Width="277"/>
@@ -40,7 +40,7 @@
                 <Button x:Name="bClearCargo" Content="Очистить" HorizontalAlignment="Left" Margin="155,130,0,0" VerticalAlignment="Top" Width="82"/>
             </Grid>
         </GroupBox>
-        <Button x:Name="bProcess" Content="Сформировать" HorizontalAlignment="Center" Margin="95,399,410,0" VerticalAlignment="Top" Width="95" Height="35" Click="bProcess_Click"/>
+        <Button x:Name="bProcess" Content="Сформировать" HorizontalAlignment="Center" Margin="95,399,410,0" VerticalAlignment="Top" Width="95" Height="35"/>
         <GroupBox Header="Тип тяги" Margin="153,97,328,298">
             <StackPanel>
                 <RadioButton x:Name="rbElectro" GroupName="PowerType" Content="Электровозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" IsChecked="True"/>
@@ -50,14 +50,14 @@
         <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="433" Margin="292,7,0,0" Stroke="Black" VerticalAlignment="Top" Width="298"/>
         <Label x:Name="lEditor" Content="Редактирование поезда" HorizontalAlignment="Left" Margin="378,11,0,0" VerticalAlignment="Top"/>
         <ListBox x:Name="lbTrains" HorizontalAlignment="Left" Height="67" Margin="301,42,0,0" VerticalAlignment="Top" Width="111"/>
-        <Button x:Name="bEdit" Content="Корректировка" Click="bEdit_Click" HorizontalAlignment="Left" Margin="312,119,0,0" VerticalAlignment="Top" Width="100"/>
+        <Button x:Name="bEdit" Content="Корректировка" HorizontalAlignment="Left" Margin="312,119,0,0" VerticalAlignment="Top" Width="100"/>
         <GroupBox x:Name="gbOperation" Header="Операция" HorizontalAlignment="Left" Height="68" Margin="417,41,0,0" VerticalAlignment="Top" Width="157">
             <WrapPanel>
                 <RadioButton x:Name="rbDepartured" Content="Отправлен" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                 <RadioButton x:Name="rbArrived" Content="Прибыл" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             </WrapPanel>
         </GroupBox>
-        <Button x:Name="bAddOperation" Click="bOperate_Click" HorizontalAlignment="Left" Margin="432,119,0,0" VerticalAlignment="Top" Width="75">
+        <Button x:Name="bAddOperation" HorizontalAlignment="Left" Margin="432,119,0,0" VerticalAlignment="Top" Width="75">
             <TextBlock Text="Произвести операцию" TextWrapping="Wrap" HorizontalAlignment="Center"/>
         </Button>
     </Grid>
