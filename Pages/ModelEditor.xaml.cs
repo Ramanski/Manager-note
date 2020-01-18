@@ -24,79 +24,188 @@ namespace Mannote.Pages
     /// </summary>
     public partial class ModelEditor : Page
     {
+        SampleContext context;
+        IQueryable<Lokomotive> freeLokomotives;
+        List<Station> stations;
+        List<Cargo> cargos;
+        int trainType = 0;
+        int powerKind = 0;
+
         public ModelEditor()
         {
             InitializeComponent();
+            // Создать объект контекста
+//            context = new SampleContext();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SampleContext>());
-
-                      
-            PowerKind powerKind = new PowerKind();
-            powerKind.Name = "На Божьем слове";
-
-            TrainType trainType = new TrainType();
-            trainType.Name = "Бомжевоз";
-
-            Code code = new Code();
-            code.Name = "Послан";
-
-            Operation operation = new Operation();
-            operation.Code = code;
-            operation.Date = DateTime.Now.AddDays(-10);
-
-            Station Stot = new Station();
-            Stot.Name = "ОтВерблюда";
-            Stot.Department = 0;
-
-            Station Stnz = new Station();
-            Stnz.Name = "Караганда";
-            Stnz.Department = 6;
-
-            CodeFirst.Path path = new CodeFirst.Path();
-            path.PathId = 3;
-            path.DepartureStation = Stot;
-            path.ArriveStation = Stnz;
-            path.Distance = 999;
-
-            Lokomotive lokomotive = new Lokomotive();
-            lokomotive.Model = "Тапок";
-            lokomotive.PowerKind = powerKind;
-            lokomotive.TrainType = trainType;
-
-            Train train = new Train();
-            train.Lokomotive = lokomotive;
-            train.Path = path;
-            train.Operations = new List<Operation>();
-            train.Operations.Add(operation);
-
-            Cargo cargo = new Cargo();
-            cargo.Name = "Чай з малинавым варэннем";
-            cargo.Weight = 0.5f;
-            cargo.CostToTransport = 50 * path.Distance;
-            train.Cargos = new List<Cargo>();
-            train.Cargos.Add(cargo);
+            // !!Построение БД заново!!
+            //Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SampleContext>());        
             
+            //Логгирование запросов к БД
+//            context.Database.Log = (s => System.Diagnostics.Debug.WriteLine(s));
+            SetParameters();
+            LoadStations();
+            cargos = new List<Cargo>();
+        }
 
-            // Создать объект контекста
-            SampleContext context = new SampleContext();
+        private void SetParameters()
+        {
+            rbCargoType.IsChecked = true;
+            rbElectro.IsChecked = true;
+        }
 
-            // Вставить данные в таблицу Customers с помощью LINQ
-            context.PowerKinds.Add(powerKind);
-            context.TrainTypes.Add(trainType);
-            context.Codes.Add(code);
-            context.Operations.Add(operation);
-            context.Stations.Add(Stot);
-            context.Stations.Add(Stnz);
-            context.Paths.Add(path);
-            context.Lokomotives.Add(lokomotive);
-            context.Cargos.Add(cargo);
-            context.Trains.Add(train);
+        private void LoadStations()
+        {
+            if (context != null)
+            {
+                //Получение списка станций
+                stations = context.Stations.OrderBy(s => s.Name).ToList();
+                //Присоединение 
+                cbArrivalStation.ItemsSource = stations;
+                cbDepartureStation.ItemsSource = stations;
+                cbArrivalStation.SelectedItem = 10;
+                cbDepartureStation.SelectedItem = 14;
+            }
+        } 
+        
+        private void LoadFreeLokomotives()
+        {
+            if (context != null)
+            {
+                //Запрос "свободных" локомотивов со статусом "брошен" или "прибыл"
+                freeLokomotives = context.Lokomotives
+                                         .Where(l => (l.Code.CodeId == 204 || l.Code.CodeId == 200) &&
+                                                l.PowerKind.PowerKindId == powerKind &&
+                                                l.TrainType.TrainTypeId == trainType);
+                cbLocomotive.ItemsSource = freeLokomotives.ToList();
+                cbLocomotive.SelectedIndex = 1;
+            }
+        }
 
-            // Сохранить изменения в БД
-            context.SaveChanges();
+        private void bProcess_Click(object sender, RoutedEventArgs e)
+        {
+             string MessageText = "Произошла непредвиденная ситуация";
+             Operation operation = new Operation();
+             operation.Code = context.Codes.Where(c=> c.CodeId == 9).SingleOrDefault();
+             operation.Date = DateTime.Now;
+
+             Train train = new Train();
+             train.Lokomotive = cbLocomotive.SelectedItem as Lokomotive;
+             try 
+             {
+                train.Path = context.Paths.Where(p => p.DepartureStation == (cbDepartureStation.SelectedItem as Station) 
+                                                    && p.ArriveStation == (cbArrivalStation.SelectedItem as Station)).Single();
+             }
+            catch (ArgumentNullException)
+            {
+                MessageText = "Не удалось найти маршрут по выбанным станциям";
+            }
+            catch (InvalidOperationException)
+            {
+                MessageText = "Найдено несколько вариантов маршрута по выбанным станциям";
+            }
+            catch(Exception)
+            {
+                MessageBox.Show(MessageText, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);  
+            }
+
+             train.Operations = new List<Operation>();
+             train.Operations.Add(operation);
+
+             train.Cargos = cargos;
+            train.Lokomotive.Code.CodeId = 9;
+
+             // Вставить данные в таблицу  с помощью LINQ
+             context.Operations.Add(operation);
+             context.Cargos.AddRange(cargos);
+             context.Trains.Add(train);
+
+             // Сохранить изменения в БД
+             context.SaveChanges();
+        }
+
+        private void bAddCargo_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                float weight = float.Parse(tbWeight.Text);
+                decimal cost = decimal.Parse(tbTariff.Text);
+                Cargo cargo = new Cargo(tbCargoName.Text, weight, cost);
+                cargos.Add(cargo);
+                lvCargo.Items.Add(cargo);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                tbWeight.Clear();
+                tbTariff.Clear();
+                tbCargoName.Clear();
+            }
+        }
+
+        private void bDelCargo_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                lvCargo.Items.RemoveAt(lvCargo.SelectedIndex);
+                cargos.RemoveAt(lvCargo.SelectedIndex);
+            }
+            catch(ArgumentOutOfRangeException)
+            {
+                MessageBox.Show("Не выбран элемент для удаления", "Будьте внимательней :)", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            }
+        }
+
+        private void bClearCargo_Click(object sender, RoutedEventArgs e)
+        {
+            cargos.Clear();
+            lvCargo.Items.Clear();
+        }
+
+        private void rbTrainType_Checked(object sender, RoutedEventArgs e)
+        {
+            if (rbCargoType.IsChecked == true)
+            //Выбран грузовой поезд
+            {
+                trainType = 2;
+                gbCargos.IsEnabled = true;
+            }
+            else
+            //Выбран пассажирский поезд
+            {
+                trainType = 1;
+                gbCargos.IsEnabled = false;
+            }
+            LoadFreeLokomotives();
+        }
+
+        private void rbPower_Checked(object sender, RoutedEventArgs e)
+        {
+            if (rbElectro.IsChecked == true)
+            //Выбрана электрическая тяга
+            {
+                powerKind = 1;
+                lLokomotive.Content = "Модель электровоза";
+            }
+            //Выбрана тепловозная тяга
+            else
+            {
+                powerKind = 2;
+                lLokomotive.Content = "Модель тепловоза";
+            }
+            LoadFreeLokomotives();
+        }
+
+        private void tbCargoName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (tbCargoName.Text == "")
+                tbCargoName.Background = new SolidColorBrush(Colors.Transparent);
+            else tbCargoName.Background = new SolidColorBrush(Colors.White);
         }
     }
 }

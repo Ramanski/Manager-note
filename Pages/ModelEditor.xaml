@@ -2,63 +2,215 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Mannote.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="600"
+      FontSize="13"
       Title="ModelEditor" Loaded="Page_Loaded">
+    <Page.Resources>
+        <Style TargetType="GroupBox">
+            <Style.Setters>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="Width" Value="Auto"/>
+            </Style.Setters>
+        </Style>
+        <Style x:Key="gbTextBlock" TargetType="TextBlock">
+            <Style.Setters>
+                <Setter Property="FontSize" Value="11"></Setter>
+                <Setter Property="FontWeight" Value="DemiBold"></Setter>
+            </Style.Setters>
+        </Style>
+        <Style TargetType="TextBox">
+            <Style.Setters>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="TextAlignment" Value="Left"/>
+                <Setter Property="MinHeight" Value="24"/>
+            </Style.Setters>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="true">
+                    <Setter Property="BorderBrush" Value="Orange"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="Border">
+            <Setter Property="BorderBrush" Value="Black"></Setter>
 
-    <Grid Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="433" Margin="10,7,0,0" Stroke="Black" VerticalAlignment="Top" Width="277"/>
-        <Label x:Name="lProcessing" Content="Формирование поезда" HorizontalAlignment="Left" Margin="64,11,0,0" VerticalAlignment="Top" Width="138"/>
-        <ComboBox x:Name="cbDepartureStation" HorizontalAlignment="Left" Margin="119,41,0,0" VerticalAlignment="Top" Width="147"/>
-        <Label x:Name="lDeparture" Content="Отправление" HorizontalAlignment="Left" Margin="21,37,0,0" VerticalAlignment="Top"/>
-        <ComboBox x:Name="cbArrivalStation" HorizontalAlignment="Left" Margin="119,70,0,0" VerticalAlignment="Top" Width="147"/>
-        <Label x:Name="lArrival" Content="Прибытие" HorizontalAlignment="Left" Margin="21,66,0,0" VerticalAlignment="Top"/>
-        <GroupBox Header="Тип поезда" Margin="21,97,460,298">
-            <StackPanel>
-                <RadioButton x:Name="rbCargoType" GroupName="TrainType" Content="Грузовой" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" IsChecked="True"/>
-                <RadioButton x:Name="rbPassType" GroupName="TrainType" Content="Пассажирский" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top"/>
-            </StackPanel>
-        </GroupBox>
-        <GroupBox Header="Локомотив" HorizontalAlignment="Left" Margin="21,157,0,245" Width="251">
+        </Style>
+        <Style TargetType="Label">
+            <Style.Setters>
+                <Setter Property="Margin" Value="10,0"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style.Setters>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="MinWidth" Value="110"></Setter>
+            <Setter Property="Height" Value="20"/>
+        </Style>
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+        </Style>
+        <Style TargetType="Button" x:Key="iconButton">
+            <Style.Setters>
+                <Setter Property="Margin" Value="3"></Setter>
+            </Style.Setters>
+        </Style>
+        <ControlTemplate x:Key="ButtonTemplate" TargetType="Button">
             <Grid>
-                <ComboBox x:Name="cbLocomotive" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Width="213"/>
+                <Border BorderBrush="Blue" CornerRadius="8" BorderThickness="1">
+                    <Border.Background>
+                        <SolidColorBrush Color="WhiteSmoke">
+                        </SolidColorBrush>
+                    </Border.Background>
+                    <ContentPresenter RecognizesAccessKey="True"></ContentPresenter>
+                </Border>
             </Grid>
-        </GroupBox>
-        <GroupBox Header="Грузы" Margin="21,205,319,56">
-            <Grid Margin="10,0,0,0">
-                <Label x:Name="lCargo" Content="Наименование" HorizontalAlignment="Left" Margin="0,-4,0,0" VerticalAlignment="Top"/>
-                <TextBox x:Name="tbCargoName" HorizontalAlignment="Left" Height="23" Margin="0,18,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="237"/>
-                <Label x:Name="lTafiff" Content="Тариф" HorizontalAlignment="Left" Margin="119,48,0,0" VerticalAlignment="Top"/>
-                <TextBox x:Name="tbTariff" HorizontalAlignment="Left" Height="23" Margin="169,50,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="68"/>
-                <Label x:Name="lWeight" Content="Вес (т)" HorizontalAlignment="Left" Margin="0,47,0,0" VerticalAlignment="Top"/>
-                <TextBox x:Name="tbWeight" HorizontalAlignment="Left" Height="23" Margin="48,50,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="52"/>
-                <ListBox x:Name="lbCargo" HorizontalAlignment="Left" Height="85" Margin="0,79,0,0" VerticalAlignment="Top" Width="146"/>
-                <Button x:Name="bAddCargo" Content="Добавить" HorizontalAlignment="Left" Margin="155,80,0,0" VerticalAlignment="Top" Width="82"/>
-                <Button x:Name="bDelCargo" Content="Удалить" HorizontalAlignment="Left" Margin="155,105,0,0" VerticalAlignment="Top" Width="82"/>
-                <Button x:Name="bClearCargo" Content="Очистить" HorizontalAlignment="Left" Margin="155,130,0,0" VerticalAlignment="Top" Width="82"/>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Cursor" Value="Hand"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Page.Resources>
+
+    <TabControl Background="AliceBlue">
+        <TabItem Header="Формирование поезда">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="57*"/>
+                    <RowDefinition Height="63*"/>
+                    <RowDefinition Height="240*"/>
+                    <RowDefinition Height="61*"/>
+                </Grid.RowDefinitions>
+                <GroupBox x:Name="gbPath" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                    <GroupBox.Header>
+                        <TextBlock Style="{StaticResource gbTextBlock}">Путь</TextBlock>
+                    </GroupBox.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Label x:Name="lDeparture" Content="Отправление" HorizontalAlignment="Left" Width="Auto" Margin="5,0"/>
+                        <ComboBox x:Name="cbDepartureStation" HorizontalAlignment="Right"/>
+                        <Button x:Name="bSwitch" Cursor="Hand" Margin="15,0" Width="25" Height="25">
+                            <Button.Content>
+                                <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\Other-Power-Switch-User-Metro-icon.png"/>
+                            </Button.Content>
+                        </Button>
+                        <Label x:Name="lArrival" Content="Прибытие" HorizontalAlignment="Left" Margin="0" Width="Auto"/>
+                        <ComboBox x:Name="cbArrivalStation" HorizontalAlignment="Right" Grid.Row="0" Grid.Column="1"/>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox x:Name="gbTypeTrain" Grid.Row="1" Grid.Column="0">
+                    <GroupBox.Header>
+                        <TextBlock Style="{StaticResource gbTextBlock}">Тип поезда</TextBlock>
+                    </GroupBox.Header>
+                    <StackPanel>
+                        <RadioButton x:Name="rbCargoType" GroupName="TrainType" Content="Грузовой" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Checked="rbTrainType_Checked"/>
+                        <RadioButton x:Name="rbPassType" GroupName="TrainType" Content="Пассажирский" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Checked="rbTrainType_Checked"/>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox x:Name="gbPowerKind" Grid.Row="1" Grid.Column="1">
+                    <GroupBox.Header>
+                        <TextBlock Style="{StaticResource gbTextBlock}">Род тяги</TextBlock>
+                    </GroupBox.Header>
+                    <StackPanel>
+                        <RadioButton x:Name="rbElectro" GroupName="PowerType" Content="Электровозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Checked="rbPower_Checked"/>
+                        <RadioButton x:Name="rbFuel" GroupName="PowerType" Content="Тепловозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Checked="rbPower_Checked"/>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox x:Name="gbCargos" Grid.Row="2" Grid.ColumnSpan="2">
+                    <GroupBox.Header>
+                        <TextBlock Style="{StaticResource gbTextBlock}">Грузы</TextBlock>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="37"/>
+                            <RowDefinition Height="37"/>
+                            <RowDefinition Height="37"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="255*" x:Name="cargoParameters"/>
+                            <ColumnDefinition Width="37" x:Name="cargoEdit"/>
+                            <ColumnDefinition Width="296*" x:Name="cargoView"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text=" Введите наименование груза..." Background="White" Margin="10,6,13,7" VerticalAlignment="Center" Foreground="LightGray"
+                       Visibility="{Binding ElementName=tbCargoName, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}"  Grid.Row="0" Grid.Column="0" Height="24"/>
+                        <TextBox x:Name="tbCargoName" Background="Transparent" Margin="10,2" MinWidth="225" TextWrapping="Wrap" Grid.Row="0" Grid.Column="0" TextChanged="tbCargoName_TextChanged"/>
+                        <Label x:Name="lWeight" Content="Вес                   т" Grid.Row="1" Grid.Column="0"/>
+                        <TextBox x:Name="tbWeight" Width="40" Margin="59,0" Grid.Row="1" Grid.Column="0" TextWrapping="NoWrap"/>
+                        <Label x:Name="lTafiff" Content="Тариф              $/км" Grid.Row="2" Grid.Column="0"/>
+                        <TextBox x:Name="tbTariff" Grid.Row="2" Grid.Column="0" TextWrapping="NoWrap" Width="40" Margin="59,0"/>
+                        <Button x:Name="bAddCargo" Template="{StaticResource ButtonTemplate}" Style="{StaticResource iconButton}" Click="bAddCargo_Click" Grid.Row="0" Grid.Column="1">
+                            <Button.Content>
+                                <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\iconAdd.gif" Stretch="None"/>
+                            </Button.Content>
+                        </Button>
+                        <Button x:Name="bDelCargo" Template="{StaticResource ButtonTemplate}" Style="{StaticResource iconButton}" Click="bDelCargo_Click" Grid.Row="1" Grid.Column="1" >
+                            <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\iconClose.gif" Stretch="None" />
+                        </Button>
+                        <Button x:Name="bClearCargo" Template="{StaticResource ButtonTemplate}" Style="{StaticResource iconButton}" Click="bClearCargo_Click" Grid.Row="2" Grid.Column="1">
+                            <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\clear.png" Stretch="None" />
+                        </Button>
+                        <ListView x:Name="lvCargo" SelectionMode="Single" Grid.RowSpan="4" Grid.Column="2">
+                            <ListView.View>
+                                <GridView>
+                                    <GridView.Columns>
+                                        <GridViewColumn Header="Наименование" Width="150" DisplayMemberBinding="{Binding Path=Name}"/>
+                                        <GridViewColumn Header="Вес, т" Width="50" DisplayMemberBinding="{Binding Path=Weight}"/>
+                                        <GridViewColumn Header="Тариф, $/км" Width="75" DisplayMemberBinding="{Binding Path=CostToTransport, StringFormat={}{0:C}}"/>
+                                    </GridView.Columns>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
+                </GroupBox>
+                <GroupBox x:Name="gbLokomotive" Grid.Row="3" Margin="5,0,5,5">
+                    <GroupBox.Header>
+                        <TextBlock Style="{StaticResource gbTextBlock}">Локомотив</TextBlock>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Label x:Name="lLokomotive" Content="Модель" Width="Auto" Margin="0"/>
+                        <ComboBox x:Name="cbLocomotive" HorizontalAlignment="Right" Margin="3,0,10,0"/>
+                    </Grid>
+                </GroupBox>
+                <Button x:Name="bProcess" Margin="25,12" Click="bProcess_Click" Grid.Row="3" Grid.Column="1">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Сформировать!" FontSize="17" Margin="10,0"/>
+                            <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\iconCalc.gif" Stretch="None"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
             </Grid>
-        </GroupBox>
-        <Button x:Name="bProcess" Content="Сформировать" HorizontalAlignment="Center" Margin="95,399,410,0" VerticalAlignment="Top" Width="95" Height="35"/>
-        <GroupBox Header="Тип тяги" Margin="153,97,328,298">
-            <StackPanel>
-                <RadioButton x:Name="rbElectro" GroupName="PowerType" Content="Электровозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" IsChecked="True"/>
-                <RadioButton x:Name="rbFuel" GroupName="PowerType" Content="Тепловозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top"/>
-            </StackPanel>
-        </GroupBox>
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="433" Margin="292,7,0,0" Stroke="Black" VerticalAlignment="Top" Width="298"/>
-        <Label x:Name="lEditor" Content="Редактирование поезда" HorizontalAlignment="Left" Margin="378,11,0,0" VerticalAlignment="Top"/>
-        <ListBox x:Name="lbTrains" HorizontalAlignment="Left" Height="67" Margin="301,42,0,0" VerticalAlignment="Top" Width="111"/>
-        <Button x:Name="bEdit" Content="Корректировка" HorizontalAlignment="Left" Margin="312,119,0,0" VerticalAlignment="Top" Width="100"/>
-        <GroupBox x:Name="gbOperation" Header="Операция" HorizontalAlignment="Left" Height="68" Margin="417,41,0,0" VerticalAlignment="Top" Width="157">
-            <WrapPanel>
-                <RadioButton x:Name="rbDepartured" Content="Отправлен" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <RadioButton x:Name="rbArrived" Content="Прибыл" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            </WrapPanel>
-        </GroupBox>
-        <Button x:Name="bAddOperation" HorizontalAlignment="Left" Margin="432,119,0,0" VerticalAlignment="Top" Width="75">
-            <TextBlock Text="Произвести операцию" TextWrapping="Wrap" HorizontalAlignment="Center"/>
-        </Button>
-    </Grid>
+        </TabItem>
+        <TabItem Header="Редактор операций">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="401*"/>
+                    <ColumnDefinition Width="193*"/>
+                </Grid.ColumnDefinitions>
+                <ListView x:Name="lbTrains" HorizontalAlignment="Left" Height="67" Margin="31,20,0,0" VerticalAlignment="Top" Width="111">
+
+                </ListView>
+                <Button x:Name="bEdit" Content="Корректировка" HorizontalAlignment="Left" Margin="16,163,0,0" VerticalAlignment="Top" Width="100" Grid.Column="1"/>
+                <GroupBox x:Name="gbOperation" Header="Операция" HorizontalAlignment="Left" Height="68" Margin="16,41,0,0" VerticalAlignment="Top" Width="157" Grid.Column="1">
+                    <WrapPanel>
+                        <RadioButton x:Name="rbDepartured" Content="Отправлен" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        <RadioButton x:Name="rbArrived" Content="Прибыл" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    </WrapPanel>
+                </GroupBox>
+                <Button x:Name="bAddOperation" HorizontalAlignment="Left" Margin="31,119,0,0" VerticalAlignment="Top" Width="75" Grid.Column="1">
+                    <TextBlock Text="Произвести операцию" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                </Button>
+            </Grid>
+        </TabItem>
+    </TabControl>
 </Page>
