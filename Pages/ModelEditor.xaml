@@ -7,8 +7,8 @@
       xmlns:local="clr-namespace:Mannote.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="600"
-      FontSize="13"
-      Title="ModelEditor" Loaded="Page_Loaded">
+      FontSize="13" x:Name="pageEditor"
+      Loaded="Page_Loaded">
     <Page.Resources>
         <Style TargetType="GroupBox">
             <Style.Setters>
@@ -36,10 +36,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <Style TargetType="Border">
-            <Setter Property="BorderBrush" Value="Black"></Setter>
-
-        </Style>
         <Style TargetType="Label">
             <Style.Setters>
                 <Setter Property="Margin" Value="10,0"/>
@@ -48,8 +44,8 @@
             </Style.Setters>
         </Style>
         <Style TargetType="ComboBox">
-            <Setter Property="MinWidth" Value="110"></Setter>
-            <Setter Property="Height" Value="20"/>
+            <Setter Property="Width" Value="150"></Setter>
+            <Setter Property="MaxHeight" Value="22"/>
         </Style>
         <Style TargetType="ComboBoxItem">
             <Setter Property="VerticalAlignment" Value="Center"></Setter>
@@ -98,9 +94,9 @@
                     <StackPanel Orientation="Horizontal">
                         <Label x:Name="lDeparture" Content="Отправление" HorizontalAlignment="Left" Width="Auto" Margin="5,0"/>
                         <ComboBox x:Name="cbDepartureStation" HorizontalAlignment="Right"/>
-                        <Button x:Name="bSwitch" Cursor="Hand" Margin="15,0" Width="25" Height="25">
+                        <Button x:Name="bSwitch" Cursor="Hand" Margin="15,0" Width="25" Height="25" Click="bSwitch_Click">
                             <Button.Content>
-                                <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\Other-Power-Switch-User-Metro-icon.png"/>
+                                <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\switch-icon.png"/>
                             </Button.Content>
                         </Button>
                         <Label x:Name="lArrival" Content="Прибытие" HorizontalAlignment="Left" Margin="0" Width="Auto"/>
@@ -112,8 +108,8 @@
                         <TextBlock Style="{StaticResource gbTextBlock}">Тип поезда</TextBlock>
                     </GroupBox.Header>
                     <StackPanel>
-                        <RadioButton x:Name="rbCargoType" GroupName="TrainType" Content="Грузовой" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Checked="rbTrainType_Checked"/>
-                        <RadioButton x:Name="rbPassType" GroupName="TrainType" Content="Пассажирский" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Checked="rbTrainType_Checked"/>
+                        <RadioButton x:Name="rbCargoType" GroupName="TrainType" Content="Грузовой" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top"/>
+                        <RadioButton x:Name="rbPassType" GroupName="TrainType" Content="Пассажирский" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top"/>
                     </StackPanel>
                 </GroupBox>
                 <GroupBox x:Name="gbPowerKind" Grid.Row="1" Grid.Column="1">
@@ -121,8 +117,8 @@
                         <TextBlock Style="{StaticResource gbTextBlock}">Род тяги</TextBlock>
                     </GroupBox.Header>
                     <StackPanel>
-                        <RadioButton x:Name="rbElectro" GroupName="PowerType" Content="Электровозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Checked="rbPower_Checked"/>
-                        <RadioButton x:Name="rbFuel" GroupName="PowerType" Content="Тепловозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" Checked="rbPower_Checked"/>
+                        <RadioButton x:Name="rbElectro" GroupName="PowerType" Content="Электровозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top"/>
+                        <RadioButton x:Name="rbFuel" GroupName="PowerType" Content="Тепловозная" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top"/>
                     </StackPanel>
                 </GroupBox>
                 <GroupBox x:Name="gbCargos" Grid.Row="2" Grid.ColumnSpan="2">
@@ -191,24 +187,59 @@
                 </Button>
             </Grid>
         </TabItem>
-        <TabItem Header="Редактор операций">
+        <TabItem Header="Редактор операций" LostFocus="TabControl_LostFocus">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="45"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="45"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="401*"/>
-                    <ColumnDefinition Width="193*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="45"/>
+                    <ColumnDefinition Width="45"/>
+                    <ColumnDefinition Width="45"/>
                 </Grid.ColumnDefinitions>
-                <ListView x:Name="lbTrains" HorizontalAlignment="Left" Height="67" Margin="31,20,0,0" VerticalAlignment="Top" Width="111">
-
+                <ListView x:Name="lvTrains" SelectionMode="Multiple" Grid.Row="0" Grid.Column="0" Margin="5" MouseDoubleClick="lvTrains_MouseDoubleClick" Grid.RowSpan="4">
+                    <ListView.View>
+                        <GridView>
+                            <GridView.Columns>
+                                <GridViewColumn Header="№" Width="35" DisplayMemberBinding="{Binding Path=train.TrainId}"/>
+                                <GridViewColumn Header="Отправление" Width="95" DisplayMemberBinding="{Binding Path=stot}"/>
+                                <GridViewColumn Header="Назначение" Width="95" DisplayMemberBinding="{Binding Path=stnz}"/>
+                                <GridViewColumn Header="Статус" Width="90" DisplayMemberBinding="{Binding Path=oper}"/>
+                                <GridViewColumn Header="Время" Width="125" DisplayMemberBinding="{Binding Path=time}"/>
+                            </GridView.Columns>
+                        </GridView>
+                    </ListView.View>
                 </ListView>
-                <Button x:Name="bEdit" Content="Корректировка" HorizontalAlignment="Left" Margin="16,163,0,0" VerticalAlignment="Top" Width="100" Grid.Column="1"/>
-                <GroupBox x:Name="gbOperation" Header="Операция" HorizontalAlignment="Left" Height="68" Margin="16,41,0,0" VerticalAlignment="Top" Width="157" Grid.Column="1">
-                    <WrapPanel>
-                        <RadioButton x:Name="rbDepartured" Content="Отправлен" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                        <RadioButton x:Name="rbArrived" Content="Прибыл" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                    </WrapPanel>
+                <Button x:Name="bRefresh" Grid.Column="1" Margin="5" Grid.Row="0" Background="Transparent" ToolTip="Обновить список" Click="bRefresh_Click">
+                    <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\database-search-icon.png" Stretch="Uniform"/>
+                </Button>
+                <Button x:Name="bInfoOperation" Grid.Column="2" Margin="5" Width="35" Grid.Row="0" Background="Transparent" Click="bInfoOperation_Click">
+                    <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\information-icon.png" Stretch="Uniform"/>
+                </Button>
+                <Button x:Name="bDeteteTrain" Grid.Column="3" HorizontalAlignment="Left" Margin="5,5,0,5" Width="35" Grid.Row="0" Background="Transparent" Click="bDeleteTrain_Click">
+                    <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\Trash-Full-Alt-icon.png" Stretch="Uniform"/>
+                </Button>
+                
+                <GroupBox x:Name="gbOperation" Header="Операция" HorizontalAlignment="Left" Height="100" VerticalAlignment="Top" Width="125" Grid.Column="1" Grid.Row="1" Margin="5,5,0,0" Grid.ColumnSpan="3">
+                    <StackPanel>
+                        <ComboBox x:Name="cbCodes" Width="100" Margin="5"/>
+                        <CheckBox x:Name="cbDateNow" Margin="5">
+                            <TextBlock Text="Текущее время" TextWrapping="Wrap" HorizontalAlignment="Stretch"/>
+                        </CheckBox>
+                    </StackPanel>
                 </GroupBox>
-                <Button x:Name="bAddOperation" HorizontalAlignment="Left" Margin="31,119,0,0" VerticalAlignment="Top" Width="75" Grid.Column="1">
-                    <TextBlock Text="Произвести операцию" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                <Button x:Name="bAddOperation" VerticalAlignment="Top" Margin="5,5,5,0" Background="Transparent" Grid.Column="1" Height="35" Grid.Row="2">
+                    <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\math-add-icon.png"/>
+                </Button>
+                <Button x:Name="bUpdateOperation" VerticalAlignment="Top" Margin="5,5,5,0" Background="Transparent" Grid.Column="2" Height="35" Grid.Row="2">
+                    <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\update-icon.png"/>
+                </Button>
+                <Button x:Name="bCancelOperation" Grid.Column="3" VerticalAlignment="Top" Margin="5,5,5,0" Width="35" Grid.Row="2" Background="Transparent" Click="bCancelOperation_Click">
+                    <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\math-minus-icon.png" Stretch="Uniform"/>
                 </Button>
             </Grid>
         </TabItem>

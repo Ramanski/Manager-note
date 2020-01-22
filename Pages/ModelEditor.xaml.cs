@@ -25,35 +25,39 @@ namespace Mannote.Pages
     public partial class ModelEditor : Page
     {
         SampleContext context;
-        IQueryable<Lokomotive> freeLokomotives;
-        List<Station> stations;
         List<Cargo> cargos;
-        int trainType = 0;
-        int powerKind = 0;
+        int powerKind = 1;
+        int trainType = 2;
 
         public ModelEditor()
         {
             InitializeComponent();
             // Создать объект контекста
-//            context = new SampleContext();
+           context = new SampleContext();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             // !!Построение БД заново!!
-            //Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SampleContext>());        
-            
+           Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SampleContext>());
             //Логгирование запросов к БД
-//            context.Database.Log = (s => System.Diagnostics.Debug.WriteLine(s));
+            context.Database.Log = (s => System.Diagnostics.Debug.WriteLine(s));
             SetParameters();
+            LoadFreeLokomotives(trainType, powerKind);
             LoadStations();
             cargos = new List<Cargo>();
+            Mouse.OverrideCursor = Cursors.Arrow;
         }
 
         private void SetParameters()
         {
             rbCargoType.IsChecked = true;
             rbElectro.IsChecked = true;
+            lLokomotive.Content = "Электровоз";
+            rbCargoType.Checked += (s, e) => rbTrainType_Checked(s, e);
+            rbPassType.Checked += (s, e) => rbTrainType_Checked(s, e);
+            rbElectro.Checked += (s, e) => rbPower_Checked(s, e);
+            rbFuel.Checked += (s,e) => rbPower_Checked(s, e);
         }
 
         private void LoadStations()
@@ -61,21 +65,21 @@ namespace Mannote.Pages
             if (context != null)
             {
                 //Получение списка станций
-                stations = context.Stations.OrderBy(s => s.Name).ToList();
+                List<Station> stations = context.Stations.OrderBy(s => s.Name).ToList();
                 //Присоединение 
                 cbArrivalStation.ItemsSource = stations;
                 cbDepartureStation.ItemsSource = stations;
-                cbArrivalStation.SelectedItem = 10;
-                cbDepartureStation.SelectedItem = 14;
+                cbArrivalStation.SelectedItem = 1;
+                cbDepartureStation.SelectedItem = 2;
             }
         } 
         
-        private void LoadFreeLokomotives()
+        private void LoadFreeLokomotives(int trainType, int powerKind)
         {
             if (context != null)
             {
                 //Запрос "свободных" локомотивов со статусом "брошен" или "прибыл"
-                freeLokomotives = context.Lokomotives
+                var freeLokomotives = context.Lokomotives
                                          .Where(l => (l.Code.CodeId == 204 || l.Code.CodeId == 200) &&
                                                 l.PowerKind.PowerKindId == powerKind &&
                                                 l.TrainType.TrainTypeId == trainType);
@@ -86,17 +90,34 @@ namespace Mannote.Pages
 
         private void bProcess_Click(object sender, RoutedEventArgs e)
         {
-             string MessageText = "Произошла непредвиденная ситуация";
-             Operation operation = new Operation();
-             operation.Code = context.Codes.Where(c=> c.CodeId == 9).SingleOrDefault();
-             operation.Date = DateTime.Now;
+            Mouse.OverrideCursor = Cursors.AppStarting;
+            string MessageText = "Произошла непредвиденная ситуация";
 
-             Train train = new Train();
-             train.Lokomotive = cbLocomotive.SelectedItem as Lokomotive;
-             try 
+            Train train = new Train
+            {
+                Lokomotive = cbLocomotive.SelectedItem as Lokomotive,
+                Cargos = cargos,
+            };
+
+            train.Lokomotive.Code = context.Codes.Where(c => c.CodeId == 9).SingleOrDefault();
+            train.Lokomotive.Train = train;
+
+            Operation operation = new Operation
+            {
+                Code = context.Codes.Where(c => c.CodeId == 9).SingleOrDefault(),
+                Date = DateTime.Now
+            };
+
+            train.Operations.Add(operation);
+            train.LastOperation = operation.Code.Name;
+
+            try 
              {
-                train.Path = context.Paths.Where(p => p.DepartureStation == (cbDepartureStation.SelectedItem as Station) 
-                                                    && p.ArriveStation == (cbArrivalStation.SelectedItem as Station)).Single();
+                int stot = (cbDepartureStation.SelectedItem as Station).StationId;
+                int stnz = (cbArrivalStation.SelectedItem as Station).StationId;
+                train.Path = context.Paths.Where(p => p.DepartureStation.StationId == stot
+                                                 && p.ArriveStation.StationId == stnz
+                                                 ).Single();
              }
             catch (ArgumentNullException)
             {
@@ -108,22 +129,54 @@ namespace Mannote.Pages
             }
             catch(Exception)
             {
-                MessageBox.Show(MessageText, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);  
+                MessageBox.Show(MessageText, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
+                Mouse.OverrideCursor = Cursors.Arrow;
+                return;
             }
 
-             train.Operations = new List<Operation>();
-             train.Operations.Add(operation);
+            float Weight = 0;
+            foreach (Cargo cargo in cargos)
+            {
+                cargo.Train = train;
+                cargo.CostToTransport *= train.Path.Distance;
+                Weight += cargo.Weight;
+            }
 
-             train.Cargos = cargos;
-            train.Lokomotive.Code.CodeId = 9;
+            train.Weight = Weight;
 
              // Вставить данные в таблицу  с помощью LINQ
              context.Operations.Add(operation);
              context.Cargos.AddRange(cargos);
              context.Trains.Add(train);
 
-             // Сохранить изменения в БД
-             context.SaveChanges();
+            // Сохранить изменения в БД
+            try
+            {
+            context.SaveChanges();
+                MessageBox.Show(String.Format("Поезд №{0} успешно сформирован!", train.TrainId), "Ответ БД", MessageBoxButton.OK, MessageBoxImage.Information); 
+            }
+            catch(System.Data.Entity.Infrastructure.DbUpdateException)
+            {
+                MessageText = "Произошла ошибка при обновлении записей.";
+            }
+            catch(System.Data.Entity.Validation.DbEntityValidationException)
+            {
+                MessageText = "Произошла ошибка при валидации полученных данных.";
+            }
+            catch(InvalidOperationException)
+            {
+                MessageText = "Произошла ошибка записи в базу данных.";
+            }
+            catch(Exception)
+            {
+                MessageBox.Show(MessageText, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            finally
+            {
+                Mouse.OverrideCursor = Cursors.Arrow;
+            }
+
         }
 
         private void bAddCargo_Click(object sender, RoutedEventArgs e)
@@ -152,8 +205,8 @@ namespace Mannote.Pages
         {
             try
             {
-                lvCargo.Items.RemoveAt(lvCargo.SelectedIndex);
                 cargos.RemoveAt(lvCargo.SelectedIndex);
+                lvCargo.Items.RemoveAt(lvCargo.SelectedIndex);
             }
             catch(ArgumentOutOfRangeException)
             {
@@ -181,7 +234,7 @@ namespace Mannote.Pages
                 trainType = 1;
                 gbCargos.IsEnabled = false;
             }
-            LoadFreeLokomotives();
+            LoadFreeLokomotives(trainType, powerKind);
         }
 
         private void rbPower_Checked(object sender, RoutedEventArgs e)
@@ -192,13 +245,13 @@ namespace Mannote.Pages
                 powerKind = 1;
                 lLokomotive.Content = "Модель электровоза";
             }
-            //Выбрана тепловозная тяга
             else
+            //Выбрана тепловозная тяга
             {
                 powerKind = 2;
                 lLokomotive.Content = "Модель тепловоза";
             }
-            LoadFreeLokomotives();
+            LoadFreeLokomotives(trainType, powerKind);
         }
 
         private void tbCargoName_TextChanged(object sender, TextChangedEventArgs e)
@@ -206,6 +259,92 @@ namespace Mannote.Pages
             if (tbCargoName.Text == "")
                 tbCargoName.Background = new SolidColorBrush(Colors.Transparent);
             else tbCargoName.Background = new SolidColorBrush(Colors.White);
+        }
+
+        private void lvTrains_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            DialogWindow 
+        }
+
+        private void bRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            //Выборка сведений по всем поездам, кроме расформированных
+            var actualTrains = context.Trains
+                .Where(t => t.Operations
+                            .OrderByDescending(o => o.OperationId)
+                            .FirstOrDefault()
+                            .Code.CodeId != 205)
+                .Select(t => new
+                {
+                    num = t.TrainId,
+                    stot = t.Path.DepartureStation.Name,
+                    stnz = t.Path.ArriveStation.Name,
+                    oper = t.Operations.FirstOrDefault().Code.Name,
+                    time = t.Operations.FirstOrDefault().Date,
+                    train = t
+                })
+                .AsEnumerable()
+                .Select(an => new OperationsView
+                {
+                    stot = an.stot,
+                    stnz = an.stnz,
+                    oper = an.oper,
+                    time = an.time,
+                    train = an.train
+                }).ToList();
+            lvTrains.ItemsSource = actualTrains;
+        }
+
+        private void bSwitch_Click(object sender, RoutedEventArgs e)
+        {
+            int sta1 = cbDepartureStation.SelectedIndex;
+            cbDepartureStation.SelectedIndex = cbArrivalStation.SelectedIndex;
+            cbArrivalStation.SelectedIndex = sta1;
+        }
+
+        private void bDeleteTrain_Click(object sender, RoutedEventArgs e)
+        {
+            List<Train> deleteTrains = new List<Train>();
+            List<Cargo> linkedCargos = new List<Cargo>();
+            foreach(OperationsView viewTrain in lvTrains.SelectedItems)
+            {
+                Train train = viewTrain.train;
+                //Удалить связанные грузы и локомотивы
+                deleteTrains.Add(train);
+                linkedCargos = context.Cargos.Where(c => c.Train == train).ToList();
+                if (linkedCargos != null)
+                    context.Cargos.RemoveRange(linkedCargos);
+                train.Lokomotive.Train = null;
+            }
+            context.Trains.RemoveRange(deleteTrains);
+            context.SaveChanges();
+            bRefresh_Click(null, null);
+        }
+
+        private void bCancelOperation_Click(object sender, RoutedEventArgs e)
+        { }
+
+        private void TabControl_LostFocus(object sender, RoutedEventArgs e)
+        {
+            /*if (context.ChangeTracker.HasChanges())
+            {
+                var result = MessageBox.Show("Сохранить внесенные изменения?", "Подтвердите изменения", MessageBoxButton.YesNoCancel);
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
+                        context.SaveChanges();
+                    case MessageBoxResult.Cancel:
+
+                    case MessageBoxResult.No:
+                }
+            }*/
+        }
+
+        private void bInfoOperation_Click(object sender, RoutedEventArgs e)
+        {
+            if (lvTrains.SelectedItems.Count == 0)
+                MessageBox.Show("Выделите хотя бы один элемент для отображения информации", "Информация", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            else lvTrains_MouseDoubleClick(null, null);
         }
     }
 }
