@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:CorLib="clr-namespace:System;assembly=mscorlib"
       xmlns:local="clr-namespace:Mannote.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="600"
@@ -173,8 +174,8 @@
                         <TextBlock Style="{StaticResource gbTextBlock}">Локомотив</TextBlock>
                     </GroupBox.Header>
                     <Grid>
-                        <Label x:Name="lLokomotive" Content="Модель" Width="Auto" Margin="0"/>
-                        <ComboBox x:Name="cbLocomotive" HorizontalAlignment="Right" Margin="3,0,10,0"/>
+                        <Label x:Name="lLokomotive" Content="Модель электровоза" Width="Auto" Margin="0"/>
+                        <ComboBox x:Name="cbLocomotive" HorizontalAlignment="Right" Width="135" Margin="5,0"/>
                     </Grid>
                 </GroupBox>
                 <Button x:Name="bProcess" Margin="25,12" Click="bProcess_Click" Grid.Row="3" Grid.Column="1">
@@ -191,7 +192,7 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="45"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="1.2*"/>
                     <RowDefinition Height="45"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
@@ -201,7 +202,7 @@
                     <ColumnDefinition Width="45"/>
                     <ColumnDefinition Width="45"/>
                 </Grid.ColumnDefinitions>
-                <ListView x:Name="lvTrains" SelectionMode="Multiple" Grid.Row="0" Grid.Column="0" Margin="5" MouseDoubleClick="lvTrains_MouseDoubleClick" Grid.RowSpan="4">
+                <ListView x:Name="lvTrains" SelectionMode="Multiple" Grid.Row="0" Grid.Column="0" Margin="5" Grid.RowSpan="4">
                     <ListView.View>
                         <GridView>
                             <GridView.Columns>
@@ -217,28 +218,31 @@
                 <Button x:Name="bRefresh" Grid.Column="1" Margin="5" Grid.Row="0" Background="Transparent" ToolTip="Обновить список" Click="bRefresh_Click">
                     <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\database-search-icon.png" Stretch="Uniform"/>
                 </Button>
-                <Button x:Name="bInfoOperation" Grid.Column="2" Margin="5" Width="35" Grid.Row="0" Background="Transparent" Click="bInfoOperation_Click">
+                <Button x:Name="bInfoOperation" Grid.Column="2" Margin="5" Width="35" Grid.Row="0" ToolTip="Список операций с поездом" Background="Transparent" Click="bInfoOperation_Click">
                     <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\information-icon.png" Stretch="Uniform"/>
                 </Button>
-                <Button x:Name="bDeteteTrain" Grid.Column="3" HorizontalAlignment="Left" Margin="5,5,0,5" Width="35" Grid.Row="0" Background="Transparent" Click="bDeleteTrain_Click">
+                <Button x:Name="bDeteteTrain" Grid.Column="3" Margin="5" Width="35"  Grid.Row="0" ToolTip="Удалить поезд"  Background="Transparent" Click="bDeleteTrain_Click">
                     <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\Trash-Full-Alt-icon.png" Stretch="Uniform"/>
                 </Button>
                 
-                <GroupBox x:Name="gbOperation" Header="Операция" HorizontalAlignment="Left" Height="100" VerticalAlignment="Top" Width="125" Grid.Column="1" Grid.Row="1" Margin="5,5,0,0" Grid.ColumnSpan="3">
-                    <StackPanel>
-                        <ComboBox x:Name="cbCodes" Width="100" Margin="5"/>
-                        <CheckBox x:Name="cbDateNow" Margin="5">
-                            <TextBlock Text="Текущее время" TextWrapping="Wrap" HorizontalAlignment="Stretch"/>
+                <GroupBox x:Name="gbOperation" Header="Операция" HorizontalAlignment="Left" Height="165" VerticalAlignment="Top" Width="125" Grid.Column="1" Grid.Row="1" Margin="5,5,0,0" Grid.ColumnSpan="3">
+                    <DockPanel>
+                        <ComboBox x:Name="cbCodes" Width="100" Margin="5" DockPanel.Dock="Top"/>
+                        <CheckBox x:Name="cbDateNow" Margin="5" IsChecked="False" DockPanel.Dock="Top">
+                            <TextBlock Text="Заменить время" TextWrapping="Wrap" HorizontalAlignment="Stretch"/>
                         </CheckBox>
-                    </StackPanel>
+                        <DatePicker Name="dpDate" IsEnabled="{Binding ElementName=cbDateNow, Path=IsChecked, Mode=OneWay}" IsDropDownOpen="{Binding ElementName=cbDateNow, Path=IsChecked, Mode=OneWay}" Margin="5" DockPanel.Dock="Top"/>
+                        <Label Content="Время" Margin="0" DockPanel.Dock="Left"/>
+                        <xctk:MaskedTextBox x:Name="tbTime" Width="55" Margin="0,3" DockPanel.Dock="Right"/>
+                    </DockPanel>
                 </GroupBox>
-                <Button x:Name="bAddOperation" VerticalAlignment="Top" Margin="5,5,5,0" Background="Transparent" Grid.Column="1" Height="35" Grid.Row="2">
+                <Button x:Name="bAddOperation" VerticalAlignment="Top" Margin="5" Background="Transparent" ToolTip="Добавить операцию"  Grid.Column="1" Height="35" Grid.Row="2" Click="bAddOperation_Click">
                     <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\math-add-icon.png"/>
                 </Button>
-                <Button x:Name="bUpdateOperation" VerticalAlignment="Top" Margin="5,5,5,0" Background="Transparent" Grid.Column="2" Height="35" Grid.Row="2">
+                <Button x:Name="bUpdateOperation" VerticalAlignment="Top" Margin="5" Background="Transparent" ToolTip="Обновить операцию" Grid.Column="2" Height="35" Grid.Row="2" Click="bUpdateOperation_Click">
                     <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\update-icon.png"/>
                 </Button>
-                <Button x:Name="bCancelOperation" Grid.Column="3" VerticalAlignment="Top" Margin="5,5,5,0" Width="35" Grid.Row="2" Background="Transparent" Click="bCancelOperation_Click">
+                <Button x:Name="bCancelOperation" Grid.Column="3" VerticalAlignment="Top" Margin="5" Width="35" ToolTip="Удалить операцию" Grid.Row="2" Background="Transparent" Click="bCancelOperation_Click">
                     <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\math-minus-icon.png" Stretch="Uniform"/>
                 </Button>
             </Grid>

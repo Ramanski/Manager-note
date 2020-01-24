@@ -16,6 +16,7 @@ using RailwayConnectedLayer;
 using System.Configuration;
 using CodeFirst;
 using System.Data.Entity;
+using System.Globalization;
 
 namespace Mannote.Pages
 {
@@ -25,7 +26,7 @@ namespace Mannote.Pages
     public partial class ModelEditor : Page
     {
         SampleContext context;
-        List<Cargo> cargos;
+        List<Cargo> cargos; 
         int powerKind = 1;
         int trainType = 2;
 
@@ -33,7 +34,9 @@ namespace Mannote.Pages
         {
             InitializeComponent();
             // Создать объект контекста
-           context = new SampleContext();
+            context = new SampleContext();
+            tbTime.Mask = "00:00:00";
+            tbTime.ValueDataType = typeof(string);
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -45,6 +48,7 @@ namespace Mannote.Pages
             SetParameters();
             LoadFreeLokomotives(trainType, powerKind);
             LoadStations();
+            LoadCodes();
             cargos = new List<Cargo>();
             Mouse.OverrideCursor = Cursors.Arrow;
         }
@@ -53,7 +57,7 @@ namespace Mannote.Pages
         {
             rbCargoType.IsChecked = true;
             rbElectro.IsChecked = true;
-            lLokomotive.Content = "Электровоз";
+            lLokomotive.Content = "Модель электровоза";
             rbCargoType.Checked += (s, e) => rbTrainType_Checked(s, e);
             rbPassType.Checked += (s, e) => rbTrainType_Checked(s, e);
             rbElectro.Checked += (s, e) => rbPower_Checked(s, e);
@@ -83,9 +87,19 @@ namespace Mannote.Pages
                                          .Where(l => (l.Code.CodeId == 204 || l.Code.CodeId == 200) &&
                                                 l.PowerKind.PowerKindId == powerKind &&
                                                 l.TrainType.TrainTypeId == trainType);
-                cbLocomotive.ItemsSource = freeLokomotives.ToList();
+                var lokomotivesList = freeLokomotives.ToList();
+                if (lokomotivesList.Count == 0)
+                    MessageBox.Show("Нет свободных локомотивов выбранного типа!", "К сведению", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                cbLocomotive.ItemsSource = lokomotivesList;
+                
                 cbLocomotive.SelectedIndex = 1;
             }
+        }
+
+        private void LoadCodes()
+        {
+            cbCodes.ItemsSource = context.Codes.ToList();
+            cbCodes.SelectedIndex = 1;
         }
 
         private void bProcess_Click(object sender, RoutedEventArgs e)
@@ -261,11 +275,6 @@ namespace Mannote.Pages
             else tbCargoName.Background = new SolidColorBrush(Colors.White);
         }
 
-        private void lvTrains_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            DialogWindow 
-        }
-
         private void bRefresh_Click(object sender, RoutedEventArgs e)
         {
             //Выборка сведений по всем поездам, кроме расформированных
@@ -322,7 +331,28 @@ namespace Mannote.Pages
         }
 
         private void bCancelOperation_Click(object sender, RoutedEventArgs e)
-        { }
+        {
+            Train selectedTrain = (lvTrains.SelectedItem as OperationsView).train;
+            List<Operation> operations = context.Trains.Where(t => t.TrainId == selectedTrain.TrainId).Select(t => t.Operations).SingleOrDefault();
+            if (operations == null)
+            {
+                MessageBox.Show("Не найдено ни одной операции с поездом", "Ошибка логики БД", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            else if (operations.Count == 1)
+                {
+                    var mbResult = MessageBox.Show("Вы собираетесь отменить единственную операцию для данного поезда, что приведет" +
+                        " к его уданению... Продолжить?", "Внимание!", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (mbResult == MessageBoxResult.Yes)
+                        bDeleteTrain_Click(null, null);
+                    return;
+                }
+            context.Operations.Remove(operations.Last());
+            operations.Remove(operations.Last());
+            selectedTrain.LastOperation = operations.Last().Code.Name;
+            context.SaveChanges();
+            bRefresh_Click(null, null);
+        }
 
         private void TabControl_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -342,9 +372,47 @@ namespace Mannote.Pages
 
         private void bInfoOperation_Click(object sender, RoutedEventArgs e)
         {
-            if (lvTrains.SelectedItems.Count == 0)
+            /*if (lvTrains.SelectedItems.Count == 0)
                 MessageBox.Show("Выделите хотя бы один элемент для отображения информации", "Информация", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-            else lvTrains_MouseDoubleClick(null, null);
+            else ...;*/
+        }
+
+        private void bAddOperation_Click(object sender, RoutedEventArgs e)
+        {
+            Code code = (Code)cbCodes.SelectedItem;
+            Train selectedTrain = (lvTrains.SelectedItem as OperationsView).train;
+            DateTime dateTime = new DateTime();
+
+            if (cbDateNow.IsChecked ?? false)
+            {
+                TimeSpan ts = new TimeSpan();
+                if (TimeSpan.TryParseExact(tbTime.Text, "hh\\:mm\\:ss", CultureInfo.CurrentCulture, out ts))
+                {
+                    dateTime = dpDate.SelectedDate.Value.Add(ts);
+                    tbTime.BorderBrush = Brushes.Black;
+                    tbTime.BorderThickness = new Thickness(1);
+                    tbTime.Background = Brushes.White;
+                }
+                else
+                {
+                    tbTime.BorderBrush = Brushes.Red;
+                    tbTime.BorderThickness = new Thickness(2);
+                    tbTime.Background = Brushes.LightPink;
+                    return;
+                }
+            }
+            else dateTime = DateTime.Now;
+            selectedTrain.Operations.Add(new Operation { Code = code, Date = dateTime });
+            selectedTrain.LastOperation = code.Name;
+            context.SaveChanges();
+        }
+
+        private void bUpdateOperation_Click(object sender, RoutedEventArgs e)
+        {
+            Code code = (Code)cbCodes.SelectedItem;
+            Train selectedTrain = (lvTrains.SelectedItem as OperationsView).train;
+            selectedTrain.Operations.Last().Code = code;
+            context.SaveChanges();
         }
     }
 }
