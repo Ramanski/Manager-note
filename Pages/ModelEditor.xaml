@@ -188,7 +188,7 @@
                 </Button>
             </Grid>
         </TabItem>
-        <TabItem Header="Редактор операций" LostFocus="TabControl_LostFocus">
+        <TabItem Header="Редактор операций">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="45"/>
