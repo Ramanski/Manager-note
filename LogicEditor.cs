@@ -11,64 +11,28 @@ namespace Mannote
     class LogicEditor
     {
         // Создать объект контекста
-        static private SampleContext context = new SampleContext();
-        static private List<Cargo> cargos = new List<Cargo>();
-        static public int powerKind { get; set; }
-        static public int trainType { get; set; }
-        static private IQueryable<Lokomotive> freeLokomotives;
-        static private IEnumerable<OperationsView> actualTrains; 
+        private SampleContext context;
+        private List<Cargo> cargoes = new List<Cargo>();
+        public int powerKind { get; set; }
+        public int trainType { get; set; }
 
-        public static void ConnectData()
+        public LogicEditor()
         {
             try
             {
-                InitializeQueries();
+            // !!Построение БД заново, если модель изменилась!!
+//          Database.SetInitializer(new DropCreateDatabaseAlways<SampleContext>());
+            context = new SampleContext();
             }
             catch(Exception)
             {
                 throw new Exception();
             }
-            // !!Построение БД заново, если модель изменилась!!
-            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SampleContext>());
             //Логгирование запросов к БД
             context.Database.Log = (s => System.Diagnostics.Debug.WriteLine(s));
         }
 
-        //с помощью LINQ
-        private static void InitializeQueries()
-        {
-            //Запрос свободных локомотивов со статусом "брошен" или "прибыл"
-            freeLokomotives = context.Lokomotives
-                                     .Where(l => (l.Code.CodeId == 204 || l.Code.CodeId == 200) &&
-                                            l.PowerKind.PowerKindId == powerKind &&
-                                            l.TrainType.TrainTypeId == trainType);
-            //Выборка сведений по всем поездам, кроме расформированных.
-            actualTrains = context.Trains
-                .Where(t => t.Operations
-                            .OrderByDescending(o => o.OperationId)
-                            .FirstOrDefault()
-                            .Code.CodeId != 205)
-                .Select(t => new
-                {
-                    num = t.TrainId,
-                    stot = t.Path.DepartureStation.Name,
-                    stnz = t.Path.ArriveStation.Name,
-                    oper = t.Operations.FirstOrDefault().Code.Name,
-                    time = t.Operations.FirstOrDefault().Date,
-                    train = t
-                })
-                .AsEnumerable()
-                .Select(an => new OperationsView
-                {
-                    stot = an.stot,
-                    stnz = an.stnz,
-                    oper = an.oper,
-                    time = an.time,
-                    train = an.train
-                });
-        }
-
-        private static Path FindPath(Station DepartureStation, Station ArrivalStation)
+        private Path FindPath(Station DepartureStation, Station ArrivalStation)
         {
             string ErrorText = "Произошла непредвиденная ситуация";
             try
@@ -95,10 +59,10 @@ namespace Mannote
             return null;
         }
 
-        private static float ProcessCargoes(Train train)
+        private float ProcessCargoes(Train train)
         {
             float Weight = 0;
-            foreach (Cargo cargo in cargos)
+            foreach (Cargo cargo in cargoes)
             {
                 cargo.Train = train;
                 cargo.CostToTransport *= train.Path.Distance;
@@ -108,55 +72,59 @@ namespace Mannote
         }
 
         // Сохранить изменения в БД
-        private static void TrySaveChanges()
+        public void TrySaveChanges(SampleContext context)
         {
-            string ErrorText = "Произошла непредвиденная ситуация";
             try
             {
                 context.SaveChanges();
-                }
+            }
             catch (System.Data.Entity.Infrastructure.DbUpdateException)
             {
-                ErrorText = "Произошла ошибка при обновлении записей.";
+                throw new Exception("Произошла ошибка при обновлении записей.");
             }
             catch (System.Data.Entity.Validation.DbEntityValidationException)
             {
-                ErrorText = "Произошла ошибка при валидации полученных данных.";
+                throw new Exception("Произошла ошибка при валидации полученных данных.");
             }
             catch (InvalidOperationException)
             {
-                ErrorText = "Произошла ошибка записи в базу данных.";
+                throw new Exception("Произошла ошибка записи в базу данных.");
             }
             catch (Exception)
             {
-                throw new Exception(ErrorText);
+                throw new Exception("Произошла непредвиденная ситуация");
             }
         }
 
-        public static List<Lokomotive> LoadFreeLokomotives()
+        public List<Lokomotive> LoadFreeLokomotives()
         {
+            //Запрос свободных локомотивов со статусом "брошен" или "прибыл"
+            var freeLokomotives = context.Lokomotives
+                                     .Where(l => (l.Train == null) &&
+                                            l.PowerKind.PowerKindId == powerKind &&
+                                            l.TrainType.TrainTypeId == trainType);
             return freeLokomotives.ToList();
         }
 
-        public static List<Station> LoadStations()
+        public List<Station> LoadStations()
         {
             //Запрос всех станций в алфавитном порядке
             return context.Stations.OrderBy(s => s.Name).ToList();
         }
 
-        public static List<Code> LoadCodes()
+        public List<Code> LoadCodes()
         {
-            return context.Codes.ToList();
+            return context.Codes.Where(c=>c.CodeId >= 200).ToList();
         }
 
-        public static int AddTrain(Lokomotive lok, Station DepartureStation, Station ArrivalStation)
+        public int AddTrain(Lokomotive lok, Station DepartureStation, Station ArrivalStation)
         {
             Train train = new Train
             {
                 //Подтягивание выбранного локомотива
                 Lokomotive = lok,
                 //Подтягивание списка грузов
-                Cargos = cargos,
+                Cargoes = cargoes,
             };
 
             //Поиск пути между выбранными станциями
@@ -172,15 +140,14 @@ namespace Mannote
             Operation operation = new Operation
             {
                 //Присвоение поезду кода операции 9 ("сформирован")
-                Code = context.Codes.Where(c => c.CodeId == 9).SingleOrDefault(),
+                Code = context.Codes.Where(c => c.CodeId == 9).Single(),
                 //Запись текущего времени операции
                 Date = DateTime.Now
             };
 
             train.Weight = ProcessCargoes(train);
-
             train.Operations.Add(operation);
-            train.LastOperation = operation.Code.Name;
+            train.LastOperation = operation.Code;
 
             //Присвоение локомотиву поезда кода операции 9 ("сформирован")
             train.Lokomotive.Code = context.Codes.Where(c => c.CodeId == 9).SingleOrDefault();
@@ -189,12 +156,12 @@ namespace Mannote
 
             // Вставить новые записи в таблицу 
             context.Operations.Add(operation);
-            context.Cargos.AddRange(cargos);
+            context.Cargoes.AddRange(cargoes);
             context.Trains.Add(train);
 
             try
             {
-                TrySaveChanges();
+                TrySaveChanges(context);
             }
             catch (Exception ex)
             {
@@ -204,47 +171,18 @@ namespace Mannote
             return train.TrainId;
         }
 
-        public static List<int> DelTrains(IList<OperationsView> selectedTrains)
-        {
-            List<Train> deleteTrains = new List<Train>();
-            List<Cargo> linkedCargos = new List<Cargo>();
-            List<int> trainIds = new List<int>();
-            foreach (OperationsView viewTrain in selectedTrains)
-            {
-                Train train = viewTrain.train;
-                deleteTrains.Add(train);
-                trainIds.Add(train.TrainId);
-                //Удалить связанные грузы
-                linkedCargos = context.Cargos.Where(c => c.Train == train).ToList();
-                if (linkedCargos != null)
-                    context.Cargos.RemoveRange(linkedCargos);
-                //Отвязать локомотивы от поезда
-                train.Lokomotive.Train = null;
-            }
-            context.Trains.RemoveRange(deleteTrains);
-            try
-            {
-                TrySaveChanges();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            return trainIds;
-        }
-
-        public static Cargo AddCargo(string name, float weight, decimal cost)
+        public Cargo AddCargo(string name, float weight, decimal cost)
         {
             Cargo cargo = new Cargo(name, weight, cost);
-            cargos.Add(cargo);
+            cargoes.Add(cargo);
             return cargo;
         }
 
-        public static void DelCargo(int index)
+        public void DelCargo(int index)
         {
             try
             {
-                cargos.RemoveAt(index);
+                cargoes.RemoveAt(index);
             }
             catch(ArgumentNullException e)
             {
@@ -253,36 +191,81 @@ namespace Mannote
             return;
         }
 
-        public static void ClearCargos()
+        public void ClearCargos()
         {
-            cargos.Clear();
+            cargoes.Clear();
         }
 
-        public static List<OperationsView> LoadActualTrains()
+        public List<OperationsView> LoadActualTrains()
         {
+            //Выборка сведений по всем поездам
+           var actualTrains = context.Trains
+                                    .Select(t => new
+                                    {
+                                        num = t.TrainId,
+                                        stot = t.Path.DepartureStation.Name,
+                                        stnz = t.Path.ArriveStation.Name,
+                                        oper = t.LastOperation.Name,
+                                        time = t.Operations.OrderByDescending(o => o.OperationId).FirstOrDefault().Date,
+                                    })
+                                    .AsEnumerable()
+                                    .Select(an => new OperationsView
+                                    {
+                                        stot = an.stot,
+                                        stnz = an.stnz,
+                                        oper = an.oper,
+                                        time = an.time,
+                                        trainId = an.num
+                                    });
             return actualTrains.ToList(); 
         }
 
-        public static int[] AddOperation(OperationsView selectedView, Code code, DateTime dateTime)
+        private void checkCodeSequence(int prevCode, int curCode)
         {
-            Train selectedTrain = selectedView.train;
+            if (prevCode == curCode)
+                    throw new Exception($"Данная операция ({prevCode}) уже была произведена");
+            if (curCode == 204 || prevCode == 204)
+                return;
+            if ((prevCode == 9 && curCode == 200) || (prevCode == 200 && curCode == 201) || (prevCode == 201 && curCode == 205))
+                return;
+            throw new Exception($"Нарушение логической последовательности операций: {prevCode} -> {curCode}") ;
+        }
+
+        public int[] AddOperation(OperationsView selectedView, Code code, DateTime dateTime)
+        {
+            Train selectedTrain = context.Trains.Where(t => t.TrainId == selectedView.trainId)
+                                                .Include(t=>t.LastOperation)
+                                                .Include(t=>t.Lokomotive)
+                                                .SingleOrDefault();
+            checkCodeSequence(selectedTrain.LastOperation.CodeId, code.CodeId);
             selectedTrain.Operations.Add(new Operation { Code = code, Date = dateTime });
-            selectedTrain.LastOperation = code.Name;
-            try
-            {
-                TrySaveChanges();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            selectedTrain.LastOperation = code;
+            selectedTrain.Lokomotive.Code = code;
+            TrySaveChanges(context);
             return new int[]{code.CodeId, selectedTrain.TrainId};
         }
 
-        public static int[] CancelOperation(OperationsView selectedView)
+        public int DelTrain(OperationsView selectedView)
         {
-            Train selectedTrain = selectedView.train;
-            List<Operation> operations = context.Trains.Where(t => t.TrainId == selectedTrain.TrainId).Select(t => t.Operations).SingleOrDefault();
+            Train selectedTrain = context.Trains
+                                         .Where(t => t.TrainId == selectedView.trainId)
+                                         .Include(t=>t.Lokomotive)
+                                         .SingleOrDefault();
+            //Отвязать локомотив от поезда
+            selectedTrain.Lokomotive.Train = null;
+            selectedTrain.Lokomotive.Code = context.Codes.Where(c => c.CodeId == 204).First();
+            context.Trains.Remove(selectedTrain);
+            TrySaveChanges(context);
+            return selectedTrain.TrainId;
+        }
+        
+        public int[] CancelOperation(OperationsView selectedView)
+        {
+            Train selectedTrain = context.Trains
+                                         .Where(t => t.TrainId == selectedView.trainId)
+                                         .Include(t => t.Lokomotive)
+                                         .SingleOrDefault();
+            List<Operation> operations = getOperations(selectedView);
             if (operations == null)
             {
                 throw new ArgumentNullException("Не найдено ни одной операции с поездом.");
@@ -291,35 +274,35 @@ namespace Mannote
             {
                 throw new ArgumentException();
             }
-            int[] opInfo = { operations.Last().Code.CodeId,selectedTrain.TrainId };
-            context.Operations.Remove(operations.Last());
-            operations.Remove(operations.Last());
-            selectedTrain.LastOperation = operations.Last().Code.Name;
-            try
-            {
-                TrySaveChanges();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            int[] opInfo = { operations.Last().Code.CodeId, selectedTrain.TrainId };
+            Operation deleteOperation = operations.Last();
+            context.Operations.Remove(deleteOperation);
+            operations.Remove(deleteOperation);
+            selectedTrain.Lokomotive.Code = operations.Last().Code;
+            selectedTrain.LastOperation = operations.Last().Code;
+            TrySaveChanges(context);
             return opInfo;
         }
 
-        public static int UpdateOperation(OperationsView selectedView, DateTime dateTime)
+        public int UpdateOperation(OperationsView selectedView, DateTime dateTime)
         {
-            Train selectedTrain = selectedView.train;
-            Operation operation = context.Trains.Where(t => t.TrainId == selectedTrain.TrainId).Select(t => t.Operations).SingleOrDefault().LastOrDefault();
-            operation.Date = dateTime;
-            try
-            {
-                TrySaveChanges();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            Train selectedTrain = context.Trains
+                                         .Where(t => t.TrainId == selectedView.trainId)
+                                         .Include(t=>t.Operations)
+                                         .SingleOrDefault();
+            selectedTrain.Operations.Last().Date = dateTime;
+            TrySaveChanges(context);
             return selectedTrain.TrainId;
+        }
+
+        public List<Operation> getOperations(OperationsView selectedView)
+        {
+            return context.Trains.Where(t => t.TrainId == selectedView.trainId).Select(t => t.Operations).Single();
+        }
+
+        public int getTrainId(OperationsView selectedView)
+        {
+            return selectedView.trainId;
         }
     }
 }
