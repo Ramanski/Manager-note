@@ -11,6 +11,15 @@
       FontSize="13" x:Name="pageEditor"
       Loaded="Page_Loaded">
     <Page.Resources>
+        <ControlTemplate x:Key="ErrorTempl">
+            <StackPanel Orientation="Horizontal">
+                <Border BorderThickness="2" BorderBrush="Red">
+                    <AdornedElementPlaceholder/>
+                </Border>
+                <Label FontSize="15" Foreground="Red" Content="*">
+                </Label>
+            </StackPanel>
+        </ControlTemplate>
         <Style TargetType="GroupBox">
             <Style.Setters>
                 <Setter Property="Margin" Value="5"/>
@@ -35,6 +44,11 @@
                     <Setter Property="BorderBrush" Value="Orange"/>
                     <Setter Property="BorderThickness" Value="2"/>
                 </Trigger>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip" Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+                        Path=(Validation.Errors)[0].ErrorContent}"/>
+                    <Setter Property="Background" Value="Pink"/>
+                </Trigger>
             </Style.Triggers>
         </Style>
         <Style TargetType="Label">
@@ -55,6 +69,18 @@
             <Style.Setters>
                 <Setter Property="Margin" Value="3"></Setter>
             </Style.Setters>
+        </Style>
+        <Style TargetType="Button" x:Key="refreshNeeded">
+            <Style.Triggers>
+                <Trigger Property="IsPressed" Value="True">
+                    <Trigger.Setters>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="LightGray"/>
+                        <Setter Property="ToolTip.Content" Value="Обновить список"/>
+                        <Setter Property="ToolTip.IsOpen" Value="False"/>
+                    </Trigger.Setters>
+                </Trigger>
+            </Style.Triggers>
         </Style>
         <ControlTemplate x:Key="ButtonTemplate" TargetType="Button">
             <Grid>
@@ -142,9 +168,9 @@
                        Visibility="{Binding ElementName=tbCargoName, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}"  Grid.Row="0" Grid.Column="0" Height="24"/>
                         <TextBox x:Name="tbCargoName" Background="Transparent" Margin="10,2" MinWidth="225" TextWrapping="Wrap" Grid.Row="0" Grid.Column="0" TextChanged="tbCargoName_TextChanged"/>
                         <Label x:Name="lWeight" Content="Вес                   т" Grid.Row="1" Grid.Column="0"/>
-                        <TextBox x:Name="tbWeight" Width="40" Margin="59,0" Grid.Row="1" Grid.Column="0" TextWrapping="NoWrap"/>
+                        <TextBox x:Name="tbWeight" Width="40" Margin="59,0" Grid.Row="1" Grid.Column="0" TextWrapping="NoWrap" Validation.ErrorTemplate="{StaticResource ErrorTempl}"/>
                         <Label x:Name="lTafiff" Content="Тариф              $/км" Grid.Row="2" Grid.Column="0"/>
-                        <TextBox x:Name="tbTariff" Grid.Row="2" Grid.Column="0" TextWrapping="NoWrap" Width="40" Margin="59,0"/>
+                        <TextBox x:Name="tbTariff" Grid.Row="2" Grid.Column="0" TextWrapping="NoWrap" Width="40" Margin="59,0" Validation.ErrorTemplate="{StaticResource ErrorTempl}"/>
                         <Button x:Name="bAddCargo" Template="{StaticResource ButtonTemplate}" Style="{StaticResource iconButton}" Click="bAddCargo_Click" Grid.Row="0" Grid.Column="1">
                             <Button.Content>
                                 <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\iconAdd.gif" Stretch="None"/>
@@ -202,20 +228,20 @@
                     <ColumnDefinition Width="45"/>
                     <ColumnDefinition Width="45"/>
                 </Grid.ColumnDefinitions>
-                <ListView x:Name="lvTrains" SelectionMode="Multiple" Grid.Row="0" Grid.Column="0" Margin="5" Grid.RowSpan="4">
+                <ListView x:Name="lvTrains" SelectionMode="Multiple" Grid.Row="0" Grid.Column="0" Margin="5" Grid.RowSpan="4" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.VerticalScrollBarVisibility="Auto">
                     <ListView.View>
                         <GridView>
                             <GridView.Columns>
-                                <GridViewColumn Header="№" Width="35" DisplayMemberBinding="{Binding Path=train.TrainId}"/>
-                                <GridViewColumn Header="Отправление" Width="95" DisplayMemberBinding="{Binding Path=stot}"/>
-                                <GridViewColumn Header="Назначение" Width="95" DisplayMemberBinding="{Binding Path=stnz}"/>
-                                <GridViewColumn Header="Статус" Width="90" DisplayMemberBinding="{Binding Path=oper}"/>
-                                <GridViewColumn Header="Время" Width="125" DisplayMemberBinding="{Binding Path=time}"/>
+                                <GridViewColumn Header="№" Width="Auto" DisplayMemberBinding="{Binding Path=trainId}"/>
+                                <GridViewColumn Header="Отправление" Width="100" DisplayMemberBinding="{Binding Path=stot}"/>
+                                <GridViewColumn Header="Назначение" Width="100" DisplayMemberBinding="{Binding Path=stnz}"/>
+                                <GridViewColumn Header="Статус" Width="Auto" DisplayMemberBinding="{Binding Path=oper}"/>
+                                <GridViewColumn Header="Время" Width="Auto" DisplayMemberBinding="{Binding Path=time}"/>
                             </GridView.Columns>
                         </GridView>
                     </ListView.View>
                 </ListView>
-                <Button x:Name="bRefresh" Grid.Column="1" Margin="5" Grid.Row="0" Background="Transparent" ToolTip="Обновить список" Click="bRefresh_Click">
+                <Button x:Name="bRefresh" Grid.Column="1" Margin="5" Grid.Row="0" Background="Transparent" ToolTip="Обновить список" Style="{StaticResource refreshNeeded}" Click="bRefresh_Click">
                     <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\database-search-icon.png" Stretch="Uniform"/>
                 </Button>
                 <Button x:Name="bInfoOperation" Grid.Column="2" Margin="5" Width="35" Grid.Row="0" ToolTip="Список операций с поездом" Background="Transparent" Click="bInfoOperation_Click">

@@ -25,6 +25,7 @@ namespace Mannote.Pages
     /// </summary>
     public partial class ModelEditor : Page
     {
+        LogicEditor logicEditor;
 
         public ModelEditor()
         {
@@ -33,11 +34,20 @@ namespace Mannote.Pages
             tbTime.ValueDataType = typeof(string);
         }
 
+        private void LightenRefreshButton()
+        {
+            bRefresh.Background = Brushes.LightCoral;
+            bRefresh.BorderBrush = Brushes.OrangeRed;
+            ToolTip toolTip = new ToolTip();
+            toolTip.Content = "Для актуализации списка требуется его обновить";
+            bRefresh.ToolTip = toolTip;
+        }
+
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
-                LogicEditor.ConnectData();
+                logicEditor = new LogicEditor();
             }
             catch(Exception)
             {
@@ -50,13 +60,14 @@ namespace Mannote.Pages
             BindStations();
             BindCodes();
             Mouse.OverrideCursor = Cursors.Arrow;
+            LightenRefreshButton();
         }
 
         private void SetParameters()
         {
-            LogicEditor.trainType = 2;
+            logicEditor.trainType = 2;
             rbCargoType.IsChecked = true;
-            LogicEditor.powerKind = 1;
+            logicEditor.powerKind = 1;
             rbElectro.IsChecked = true;
             lLokomotive.Content = "Модель электровоза";
             rbCargoType.Checked += (s, e) => rbTrainType_Checked(s, e);
@@ -67,39 +78,41 @@ namespace Mannote.Pages
 
         private void BindLokomotives()
         {
-            List<Lokomotive> lok = LogicEditor.LoadFreeLokomotives();
+            List<Lokomotive> lok = logicEditor.LoadFreeLokomotives();
             if (lok.Count == 0)
                 MessageBox.Show("Нет свободных локомотивов выбранного типа!", "К сведению", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             cbLocomotive.ItemsSource = lok;
-            cbLocomotive.SelectedIndex = 1;
+            cbLocomotive.SelectedIndex = 0;
         }
 
         private void BindStations()
         {
-                var stations = LogicEditor.LoadStations();
+                var stations = logicEditor.LoadStations();
                 //Присоединение станций прибытия к combobox
                 cbArrivalStation.ItemsSource = stations;
                 //Присоединение станций отправления к combobox
                 cbDepartureStation.ItemsSource = stations;
-                cbArrivalStation.SelectedItem = 1;
-                cbDepartureStation.SelectedItem = 2;
+                cbArrivalStation.SelectedIndex = 0;
+                cbDepartureStation.SelectedIndex = 1;
         } 
         
         private void BindCodes()
         {
-            cbCodes.ItemsSource = LogicEditor.LoadCodes();
-            cbCodes.SelectedIndex = 1;
+            cbCodes.ItemsSource = logicEditor.LoadCodes();
+            cbCodes.SelectedIndex = 0;
         }
 
         private void bProcess_Click(object sender, RoutedEventArgs e)
         {
+                Mouse.OverrideCursor = Cursors.AppStarting;
             try
             {
-                Mouse.OverrideCursor = Cursors.AppStarting;
-                int trainId = LogicEditor.AddTrain(cbLocomotive.SelectedItem as Lokomotive, 
+                int trainId = logicEditor.AddTrain(cbLocomotive.SelectedItem as Lokomotive, 
                                                    cbDepartureStation.SelectedItem as Station, 
                                                    cbArrivalStation.SelectedItem as Station);
                 MessageBox.Show(String.Format("Поезд №{0} успешно сформирован!", trainId), "Ответ БД", MessageBoxButton.OK, MessageBoxImage.Information);
+                bClearCargo_Click(null, null);
+                BindLokomotives();
             }
             catch (Exception ex)
             {
@@ -118,7 +131,7 @@ namespace Mannote.Pages
             {
                 float weight = float.Parse(tbWeight.Text);
                 decimal cost = decimal.Parse(tbTariff.Text);
-                lvCargo.Items.Add(LogicEditor.AddCargo(tbCargoName.Text, weight, cost));
+                lvCargo.Items.Add(logicEditor.AddCargo(tbCargoName.Text, weight, cost));
             }
             catch (Exception ex)
             {
@@ -136,7 +149,7 @@ namespace Mannote.Pages
         {
             try
             {
-                LogicEditor.DelCargo(lvCargo.SelectedIndex);
+                logicEditor.DelCargo(lvCargo.SelectedIndex);
                 lvCargo.Items.RemoveAt(lvCargo.SelectedIndex);
             }
             catch(ArgumentNullException)
@@ -147,7 +160,7 @@ namespace Mannote.Pages
 
         private void bClearCargo_Click(object sender, RoutedEventArgs e)
         {
-            LogicEditor.ClearCargos();
+            logicEditor.ClearCargos();
             lvCargo.Items.Clear();
         }
 
@@ -156,13 +169,13 @@ namespace Mannote.Pages
             if (rbCargoType.IsChecked == true)
             //Выбран грузовой поезд
             {
-                LogicEditor.trainType = 2;
+                logicEditor.trainType = 2;
                 gbCargos.IsEnabled = true;
             }
             else
             //Выбран пассажирский поезд
             {
-                LogicEditor.trainType = 1;
+                logicEditor.trainType = 1;
                 gbCargos.IsEnabled = false;
             }
             BindLokomotives();
@@ -173,13 +186,13 @@ namespace Mannote.Pages
             if (rbElectro.IsChecked == true)
             //Выбрана электрическая тяга
             {
-                LogicEditor.powerKind = 1;
+                logicEditor.powerKind = 1;
                 lLokomotive.Content = "Модель электровоза";
             }
             else
             //Выбрана тепловозная тяга
             {
-                LogicEditor.powerKind = 2;
+                logicEditor.powerKind = 2;
                 lLokomotive.Content = "Модель тепловоза";
             }
             BindLokomotives();
@@ -194,7 +207,12 @@ namespace Mannote.Pages
 
         private void bRefresh_Click(object sender, RoutedEventArgs e)
         {
-            lvTrains.ItemsSource = LogicEditor.LoadActualTrains();
+            lvTrains.ItemsSource = logicEditor.LoadActualTrains();
+            bRefresh.Background = Brushes.Transparent;
+            bRefresh.BorderBrush = Brushes.LightGray;
+            ToolTip toolTip = new ToolTip();
+            toolTip.Content = "Обновить список";
+            bRefresh.ToolTip = toolTip;
         }
 
         private void bSwitch_Click(object sender, RoutedEventArgs e)
@@ -208,8 +226,12 @@ namespace Mannote.Pages
         {
             try
             {
-                List<int> trainIds = LogicEditor.DelTrains((IList<OperationsView>)lvTrains.SelectedItems);
+                List<int> trainIds = new List<int>();
+                foreach (object selectedTrain in lvTrains.SelectedItems)
+                trainIds.Add(logicEditor.DelTrain((OperationsView)selectedTrain));
                 MessageBox.Show(String.Format("Поезд(а) №{0} успешно удалены!", String.Join(",", trainIds)), "Ответ БД", MessageBoxButton.OK, MessageBoxImage.Information);
+                lvTrains.SelectedItems.Clear();
+                LightenRefreshButton();
             }
             catch (Exception ex)
             {
@@ -221,8 +243,10 @@ namespace Mannote.Pages
         {
             try
             {
-                int[] opInfo = LogicEditor.CancelOperation((OperationsView)lvTrains.SelectedItem);
+                int[] opInfo = logicEditor.CancelOperation((OperationsView)lvTrains.SelectedItem);
                 MessageBox.Show(String.Format("Операция с кодом {0} для поезда №{1} успешно отменена!", opInfo[0], opInfo[1]), "Ответ БД", MessageBoxButton.OK, MessageBoxImage.Information);
+                lvTrains.SelectedItem = null;
+                LightenRefreshButton();
             }
             catch(ArgumentException)
             {
@@ -239,9 +263,16 @@ namespace Mannote.Pages
 
         private void bInfoOperation_Click(object sender, RoutedEventArgs e)
         {
-            /*if (lvTrains.SelectedItems.Count == 0)
-                MessageBox.Show("Выделите хотя бы один элемент для отображения информации", "Информация", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-            else ...;*/
+            try
+            {
+                OperationsInfo op = new OperationsInfo(logicEditor.getTrainId((OperationsView)lvTrains.SelectedItem), logicEditor.getOperations((OperationsView)lvTrains.SelectedItem));
+                op.ShowDialog();
+                lvTrains.SelectedItem = null;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void bAddOperation_Click(object sender, RoutedEventArgs e)
@@ -258,8 +289,10 @@ namespace Mannote.Pages
 
             try
             {
-                int[] opInfo = LogicEditor.AddOperation(lvTrains.SelectedItem as OperationsView, (Code)cbCodes.SelectedItem, dateTime);
+                int[] opInfo = logicEditor.AddOperation(lvTrains.SelectedItem as OperationsView, (Code)cbCodes.SelectedItem, dateTime);
                 MessageBox.Show(String.Format("Операция с кодом {0} для поезда №{1} успешно добавлена!", opInfo[0], opInfo[1]), "Ответ БД", MessageBoxButton.OK, MessageBoxImage.Information);
+                lvTrains.SelectedItem = null;
+                LightenRefreshButton();
             }
             catch (Exception ex)
             {
@@ -282,8 +315,10 @@ namespace Mannote.Pages
 
             try
             {
-                int trInfo = LogicEditor.UpdateOperation(lvTrains.SelectedItem as OperationsView, dateTime);
+                int trInfo = logicEditor.UpdateOperation(lvTrains.SelectedItem as OperationsView, dateTime);
                 MessageBox.Show(String.Format("Время последней операции для поезда №{0} успешно обновлено!", trInfo), "Ответ БД", MessageBoxButton.OK, MessageBoxImage.Information);
+                lvTrains.SelectedItem = null;
+                LightenRefreshButton();
             }
             catch (Exception ex)
             {
