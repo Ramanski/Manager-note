@@ -1,75 +1,132 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Mannote
 {
     /// <summary>
     /// Interaction logic for Statistic.xaml
     /// </summary>
-    public partial class Statistic : Page
+    public partial class ModelStatistic : Page
     {
-        SqlCommand myCommand;
-        ArrayList arrayList;
+        StatisticModel sm;
 
-        public Statistic()
+        public ModelStatistic()
         {
             InitializeComponent();
+            sm = new StatisticModel(0, new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, 18, 0, 0).AddDays(-1) , DateTime.Now);
+            SetUIElements();
+            UpdateTextBlocks();
+            Mouse.OverrideCursor = Cursors.Arrow;
         }
 
-        void connectDB()
+        private void UpdateTextBlocks()
         {
-            // Получение строки подключения и поставщика из *.config
-            string provider = ConfigurationManager.AppSettings["provider"];
-            string connectionStr = ConfigurationManager.AppSettings["conStr"];
-            // Создание открытого подключения
-            using (SqlConnection cn = new SqlConnection())
+            string departmentName;
+            switch (sm.currentDepartment)
             {
-                cn.ConnectionString = connectionStr;
-                try
-                {
-                    //Открыть подключение
-                    cn.Open();
-                    // Создание объекта команды с помощью конструктора
-                    string strSQL = "Select * From [Stations]";
-                    myCommand = new SqlCommand(strSQL, cn);
-                    //Выполнение запроса
-                    SqlDataReader dr = myCommand.ExecuteReader();
-                    while (dr.Read())
-                        arrayList.Add(dr.GetString(1));
-                }
-                catch (SqlException ex)
-                {
-                    // Протоколировать исключение
-                    Console.WriteLine(ex.Message);
-                }
-                finally
-                {
-                    // Гарантировать освобождение подключения
-                    cn.Close();
-                }
+                case 0:
+                    departmentName = "всей дороге БЧ";
+                    break;
+                case 1:
+                    departmentName = "Минскому отделению";
+                    break;
+                case 2:
+                    departmentName = "Барановичскому отделению";
+                    break;
+                case 3:
+                    departmentName = "Брестскому отделению";
+                    break;
+                case 4:
+                    departmentName = "Гомельскому отделению";
+                    break;
+                case 5:
+                    departmentName = "Могилевскому отделению";
+                    break;
+                case 6:
+                    departmentName = "Витебскому отделению";
+                    break;
+                default:
+                    departmentName = "???";
+                    break;
+            }
+            tbDepartment.Text = "Показатели работы по "+departmentName;
+            tbPeriod.Text = $"с {sm.dtFromTime.ToString("HH:mm d MMM yyyy", CultureInfo.GetCultureInfo("ru-RU"))} по {sm.dtToTime.ToString("HH:mm d MMM yyyy", CultureInfo.GetCultureInfo("ru-RU"))}";
+        }
+
+        private void SetUIElements()
+        {
+            rbNod0.IsChecked = true;
+            dpStartPeriod.SelectedDate = sm.dtFromTime;
+            dpEndPeriod.SelectedDate = sm.dtToTime;
+        }
+
+        private void bCalculate_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            Mouse.OverrideCursor = Cursors.AppStarting;
+            try
+            {
+                dgValues.ItemsSource = sm.CalculateValues();
+                UpdateTextBlocks();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = Cursors.Arrow;
             }
         }
 
-        private void button_Click(object sender, RoutedEventArgs e)
+        private void rbNod_Checked(object sender, RoutedEventArgs e)
         {
-            arrayList = new ArrayList();
-            connectDB();
-            comboBox.ItemsSource = arrayList;
+            RadioButton selectedRb = (RadioButton)sender;
+
+            switch(selectedRb.Name)
+            {
+                case "rbNod0":
+                    sm.currentDepartment = 0;
+                    break;
+                case "rbNod1":
+                    sm.currentDepartment = 1;
+                    break;
+                case "rbNod2":
+                    sm.currentDepartment = 2;
+                    break;
+                case "rbNod3":
+                    sm.currentDepartment = 3;
+                    break;
+                case "rbNod4":
+                    sm.currentDepartment = 4;
+                    break;
+                case "rbNod5":
+                    sm.currentDepartment = 5;
+                    break;
+                case "rbNod6":
+                    sm.currentDepartment = 6;
+                    break;
+            }
+        }
+
+        private void dpStartPeriod_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void dpEndPeriod_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(dpEndPeriod.SelectedDate <= dpStartPeriod.SelectedDate)
+            {
+                ToolTip "Конец периода не может превышать начало отсчета";
+            }
+            if(dpEndPeriod.SelectedDate > DateTime.Now)
+            {
+                dpEndPeriod.SelectedDate = DateTime.Now;
+            }
         }
     }
 }

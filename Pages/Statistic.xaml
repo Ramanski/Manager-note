@@ -1,16 +1,61 @@
-﻿<Page x:Class="Mannote.Statistic"
+﻿<Page x:Class="Mannote.ModelStatistic"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Mannote"
       mc:Ignorable="d" 
-      Height="450" Width="600"
-      Title="Statistic">
+      d:DesignHeight="450" d:DesignWidth="600"
+      Title="Statistic"
+      Background="AliceBlue">
+    <Page.Resources>
+        <Style TargetType="RadioButton" x:Key="rbDepartment">
+            <Setter Property="Width" Value="60"/>
+            <Setter Property="GroupName" Value="rbDepartment"/>
+            <EventSetter Event="Checked" Handler="rbNod_Checked"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="tbTitle">
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+    </Page.Resources>
 
-    <Grid>
-        <TextBlock Text="Statistic page" Foreground="#FF239B4E" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="22" FontStyle="Italic"/>
-        <Button x:Name="button" Content="Button" HorizontalAlignment="Center" Margin="0,70,0,0" VerticalAlignment="Center" Width="74" Click="button_Click"/>
-        <ComboBox x:Name="comboBox" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="213"/>
-    </Grid>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Left" Margin="5" MaxWidth="150">
+            <GroupBox Header="Организация">
+                <WrapPanel Margin="5">
+                    <RadioButton x:Name="rbNod0" Style="{StaticResource rbDepartment}"  Content="БЧ"/>
+                    <RadioButton x:Name="rbNod1" Style="{StaticResource rbDepartment}" Content="НОД 1"/>
+                    <RadioButton x:Name="rbNod2" Style="{StaticResource rbDepartment}" Content="НОД 2"/>
+                    <RadioButton x:Name="rbNod3" Style="{StaticResource rbDepartment}" Content="НОД 3"/>
+                    <RadioButton x:Name="rbNod4" Style="{StaticResource rbDepartment}" Content="НОД 4"/>
+                    <RadioButton x:Name="rbNod5" Style="{StaticResource rbDepartment}" Content="НОД 5"/>
+                    <RadioButton x:Name="rbNod6" Style="{StaticResource rbDepartment}" Content="НОД 6"/>
+                </WrapPanel>
+            </GroupBox>
+            <GroupBox Header="Расчетный период" Margin="5">
+                <StackPanel>
+                    <Label Content="Начало периода"/>
+                    <DatePicker Name="dpStartPeriod" SelectedDateChanged="dpStartPeriod_SelectedDateChanged"/>
+                    <Label Content="Конец периода"/>
+                    <DatePicker Name="dpEndPeriod" SelectedDateChanged="dpEndPeriod_SelectedDateChanged"/>
+                </StackPanel>
+            </GroupBox>
+                    <Button x:Name="bCalculate" Content="Рассчитать" Margin="5" Click="bCalculate_Click"/>
+        </StackPanel>
+        <StackPanel Margin="5">
+            <TextBlock Style="{StaticResource tbTitle}" x:Name="tbDepartment" FontSize="17"/>
+            <TextBlock Style="{StaticResource tbTitle}" x:Name="tbPeriod" FontSize="14"/>
+            <DataGrid x:Name="dgValues" AutoGenerateColumns="False" Margin="3">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Наименование показателя" Binding="{Binding Path=name}"/>
+                    <DataGridTextColumn Header="Факт" Binding="{Binding Path=value}"/>
+                    <DataGridTextColumn Header="План" Binding="{Binding Path=plan}"/>
+                    <DataGridTextColumn Header="% к плану" Binding="{Binding Path=percentage}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+    </DockPanel>
 </Page>
