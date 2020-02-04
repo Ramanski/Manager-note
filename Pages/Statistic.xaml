@@ -7,7 +7,7 @@
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="600"
       Title="Statistic"
-      Background="AliceBlue">
+      Background="AliceBlue" Loaded="Page_Loaded">
     <Page.Resources>
         <Style TargetType="RadioButton" x:Key="rbDepartment">
             <Setter Property="Width" Value="60"/>
@@ -19,6 +19,11 @@
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="dgColumn">
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="2"/>
         </Style>
     </Page.Resources>
 
@@ -38,22 +43,26 @@
             <GroupBox Header="Расчетный период" Margin="5">
                 <StackPanel>
                     <Label Content="Начало периода"/>
-                    <DatePicker Name="dpStartPeriod" SelectedDateChanged="dpStartPeriod_SelectedDateChanged"/>
+                    <DatePicker Name="dpStartPeriod"/>
                     <Label Content="Конец периода"/>
-                    <DatePicker Name="dpEndPeriod" SelectedDateChanged="dpEndPeriod_SelectedDateChanged"/>
+                    <DatePicker Name="dpEndPeriod"/>
                 </StackPanel>
             </GroupBox>
                     <Button x:Name="bCalculate" Content="Рассчитать" Margin="5" Click="bCalculate_Click"/>
+            <Button x:Name="bPlanSave" IsEnabled="False" Margin="5" Click="bPlanSave_Click">
+                <TextBlock Text="Сохранить плановые показатели" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
         </StackPanel>
         <StackPanel Margin="5">
-            <TextBlock Style="{StaticResource tbTitle}" x:Name="tbDepartment" FontSize="17"/>
-            <TextBlock Style="{StaticResource tbTitle}" x:Name="tbPeriod" FontSize="14"/>
-            <DataGrid x:Name="dgValues" AutoGenerateColumns="False" Margin="3">
+            <TextBlock Style="{StaticResource tbTitle}" x:Name="tbDepartment" FontSize="17" Text="Для загрузки показателей выберите период"/>
+            <TextBlock Style="{StaticResource tbTitle}" x:Name="tbPeriod" FontSize="14" Text="и нажмите Рассчитать"/>
+            <DataGrid x:Name="dgValues" AutoGenerateColumns="False" Margin="3" FontSize="13" LoadingRow="dgValues_LoadingRow" CellEditEnding="dgValues_CellEditEnding">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Наименование показателя" Binding="{Binding Path=name}"/>
-                    <DataGridTextColumn Header="Факт" Binding="{Binding Path=value}"/>
-                    <DataGridTextColumn Header="План" Binding="{Binding Path=plan}"/>
-                    <DataGridTextColumn Header="% к плану" Binding="{Binding Path=percentage}"/>
+                    <DataGridTextColumn Header="Наименование показателя" Binding="{Binding Path=name}" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Факт" Binding="{Binding Path=value, StringFormat={}{0:F1}}" IsReadOnly="True" ElementStyle="{StaticResource dgColumn}"/>
+                    <DataGridTextColumn Header="План" x:Name="dgPlan" Binding="{Binding Path=plan, Mode=TwoWay, StringFormat={}{0:F1}}" ElementStyle="{StaticResource dgColumn}"/>
+                    <DataGridTextColumn Header="% к плану" x:Name="dgPercentage"
+                                        Binding="{Binding Path=percentage, StringFormat={}{0:P1}}" IsReadOnly="True" ElementStyle="{StaticResource dgColumn}"/>
                 </DataGrid.Columns>
             </DataGrid>
         </StackPanel>

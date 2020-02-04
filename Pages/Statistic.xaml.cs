@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Mannote
 {
@@ -16,10 +17,11 @@ namespace Mannote
 
         public ModelStatistic()
         {
+            Mouse.OverrideCursor = Cursors.Wait;
             InitializeComponent();
-            sm = new StatisticModel(0, new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, 18, 0, 0).AddDays(-1) , DateTime.Now);
+            dgPlan.IsReadOnly = !App.priveleges.EditPlans;
+            sm = new StatisticModel();
             SetUIElements();
-            UpdateTextBlocks();
             Mouse.OverrideCursor = Cursors.Arrow;
         }
 
@@ -54,22 +56,62 @@ namespace Mannote
                     break;
             }
             tbDepartment.Text = "Показатели работы по "+departmentName;
-            tbPeriod.Text = $"с {sm.dtFromTime.ToString("HH:mm d MMM yyyy", CultureInfo.GetCultureInfo("ru-RU"))} по {sm.dtToTime.ToString("HH:mm d MMM yyyy", CultureInfo.GetCultureInfo("ru-RU"))}";
+            DateTime[] period = sm.GetPeriod();
+            tbPeriod.Text = $"с {period[0].ToString("HH:mm d MMM yyyy", CultureInfo.GetCultureInfo("ru-RU"))} по {period[1].ToString("HH:mm d MMM yyyy", CultureInfo.GetCultureInfo("ru-RU"))}";
         }
 
         private void SetUIElements()
         {
             rbNod0.IsChecked = true;
-            dpStartPeriod.SelectedDate = sm.dtFromTime;
-            dpEndPeriod.SelectedDate = sm.dtToTime;
+            dpStartPeriod.DisplayDateStart = dpEndPeriod.DisplayDateStart = new DateTime(2019, 1, 1);
+            dpEndPeriod.DisplayDateEnd = DateTime.Today;
+            dpStartPeriod.DisplayDateEnd = DateTime.Today.AddDays(-1);
+            dpStartPeriod.SelectedDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddDays(-1);
+            dpEndPeriod.SelectedDate = DateTime.Today;
+            dpStartPeriod.SelectedDateChanged += (s, e) => dpPeriod_SelectedDateChanged();
+            dpEndPeriod.SelectedDateChanged += (s, e) => dpPeriod_SelectedDateChanged();
         }
 
         private void bCalculate_Click(object sender, System.Windows.RoutedEventArgs e)
         {
+            try
+            {
+                DateTime dtToTime = (dpEndPeriod.SelectedDate.Value == DateTime.Today? DateTime.Now: dpEndPeriod.SelectedDate.Value.AddHours(18));
+                DateTime dtFromTime = dpStartPeriod.SelectedDate.Value.AddHours(18);
+                sm.SetNewPeriod(dtFromTime, dtToTime);
+            }
+            catch(ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Будьте внимательней :)", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            
             Mouse.OverrideCursor = Cursors.AppStarting;
             try
             {
-                dgValues.ItemsSource = sm.CalculateValues();
+                sm.CalculateValues();
+                try
+                {
+                    if (sm.SetPlanValues())
+                    {
+                        //Период входит в рамки одного отчетного месяца
+                        dgPlan.Visibility = Visibility.Visible;
+                        dgPercentage.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        //Период выходит за рамки отчетного месяца
+                        dgPlan.Visibility = Visibility.Collapsed;
+                        dgPercentage.Visibility = Visibility.Collapsed;
+                    }
+                }
+                catch(ArgumentException ex)
+                {
+                    MessageBox.Show(ex.Message, "Плановые показатели", MessageBoxButton.OK, MessageBoxImage.Information);
+                    dgPlan.Visibility = Visibility.Visible;
+                    dgPercentage.Visibility = Visibility.Collapsed;
+                }
+                dgValues.ItemsSource = sm.GetStatisticValues();
                 UpdateTextBlocks();
             }
             catch (Exception ex)
@@ -112,20 +154,57 @@ namespace Mannote
             }
         }
 
-        private void dpStartPeriod_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        private void dpPeriod_SelectedDateChanged()
         {
-
+            if (dpStartPeriod.SelectedDate < dpEndPeriod.SelectedDate)
+            {
+                dpEndPeriod.Background = dpStartPeriod.Background = Brushes.White;
+            }
+            else
+            {
+                dpEndPeriod.Background = dpStartPeriod.Background = Brushes.LightCoral;
+            }
         }
 
-        private void dpEndPeriod_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            if(dpEndPeriod.SelectedDate <= dpStartPeriod.SelectedDate)
+            Mouse.OverrideCursor = Cursors.Arrow;
+        }
+
+        private void dgValues_LoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            StatisticValue sv = (StatisticValue)e.Row.DataContext;
+            if (sv.percentage < 100 && sv.percentage > 0)
+                e.Row.Background = Brushes.Gold;
+            else e.Row.Background = Brushes.White;
+        }
+
+        private void bPlanSave_Click(object sender, RoutedEventArgs e)
+        {
+            try
             {
-                ToolTip "Конец периода не может превышать начало отсчета";
+                sm.SavePlanValues();
+                MessageBox.Show($"Плановые показатели за {sm.GetPeriod()[1].ToString("MMMM yyyy года", CultureInfo.GetCultureInfo("ru-RU"))} успешно установлены.");
             }
-            if(dpEndPeriod.SelectedDate > DateTime.Now)
+            catch(Exception ex)
             {
-                dpEndPeriod.SelectedDate = DateTime.Now;
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void dgValues_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            float val;
+            var editedTextBox = (TextBox) e.EditingElement;
+            if (editedTextBox != null)
+            {
+                float.TryParse(editedTextBox.Text, out val);
+                if (val < 0)
+                    e.Cancel = true;
+                else
+                {
+                    bPlanSave.IsEnabled = true;
+                }
             }
         }
     }
