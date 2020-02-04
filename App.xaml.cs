@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using static CodeFirst.Administration;
 
 namespace Mannote
 {
@@ -13,5 +14,7 @@ namespace Mannote
     /// </summary>
     public partial class App : Application
     {
+        public static Person user;
+        public static Privelege priveleges;
     }
 }
