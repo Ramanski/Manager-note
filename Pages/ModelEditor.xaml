@@ -6,6 +6,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:CorLib="clr-namespace:System;assembly=mscorlib"
       xmlns:local="clr-namespace:Mannote.Pages"
+      xmlns:myns="clr-namespace:Mannote.ValidationRules"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="600"
       FontSize="13" x:Name="pageEditor"
@@ -16,7 +17,7 @@
                 <Border BorderThickness="2" BorderBrush="Red">
                     <AdornedElementPlaceholder/>
                 </Border>
-                <Label FontSize="15" Foreground="Red" Content="*">
+                <Label FontSize="15" Foreground="Red" Margin="5,-5" Content="*">
                 </Label>
             </StackPanel>
         </ControlTemplate>
@@ -102,7 +103,7 @@
     </Page.Resources>
 
     <TabControl Background="AliceBlue">
-        <TabItem Header="Формирование поезда">
+        <TabItem Header="Формирование поезда" x:Name="tiFormTrain">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -118,7 +119,7 @@
                     <GroupBox.Header>
                         <TextBlock Style="{StaticResource gbTextBlock}">Путь</TextBlock>
                     </GroupBox.Header>
-                    <StackPanel Orientation="Horizontal">
+                    <WrapPanel Orientation="Horizontal">
                         <Label x:Name="lDeparture" Content="Отправление" HorizontalAlignment="Left" Width="Auto" Margin="5,0"/>
                         <ComboBox x:Name="cbDepartureStation" HorizontalAlignment="Right"/>
                         <Button x:Name="bSwitch" Cursor="Hand" Margin="15,0" Width="25" Height="25" Click="bSwitch_Click">
@@ -128,7 +129,7 @@
                         </Button>
                         <Label x:Name="lArrival" Content="Прибытие" HorizontalAlignment="Left" Margin="0" Width="Auto"/>
                         <ComboBox x:Name="cbArrivalStation" HorizontalAlignment="Right" Grid.Row="0" Grid.Column="1"/>
-                    </StackPanel>
+                    </WrapPanel>
                 </GroupBox>
                 <GroupBox x:Name="gbTypeTrain" Grid.Row="1" Grid.Column="0">
                     <GroupBox.Header>
@@ -152,7 +153,7 @@
                     <GroupBox.Header>
                         <TextBlock Style="{StaticResource gbTextBlock}">Грузы</TextBlock>
                     </GroupBox.Header>
-                    <Grid>
+                    <Grid x:Name="gridCargoDetails">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="37"/>
                             <RowDefinition Height="37"/>
@@ -164,13 +165,37 @@
                             <ColumnDefinition Width="37" x:Name="cargoEdit"/>
                             <ColumnDefinition Width="296*" x:Name="cargoView"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text=" Введите наименование груза..." Background="White" Margin="10,6,13,7" VerticalAlignment="Center" Foreground="LightGray"
-                       Visibility="{Binding ElementName=tbCargoName, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}"  Grid.Row="0" Grid.Column="0" Height="24"/>
-                        <TextBox x:Name="tbCargoName" Background="Transparent" Margin="10,2" MinWidth="225" TextWrapping="Wrap" Grid.Row="0" Grid.Column="0" TextChanged="tbCargoName_TextChanged"/>
-                        <Label x:Name="lWeight" Content="Вес                   т" Grid.Row="1" Grid.Column="0"/>
-                        <TextBox x:Name="tbWeight" Width="40" Margin="59,0" Grid.Row="1" Grid.Column="0" TextWrapping="NoWrap" Validation.ErrorTemplate="{StaticResource ErrorTempl}"/>
-                        <Label x:Name="lTafiff" Content="Тариф              $/км" Grid.Row="2" Grid.Column="0"/>
-                        <TextBox x:Name="tbTariff" Grid.Row="2" Grid.Column="0" TextWrapping="NoWrap" Width="40" Margin="59,0" Validation.ErrorTemplate="{StaticResource ErrorTempl}"/>
+                        <TextBlock Text=" Введите наименование груза..." Background="White"  Width="{Binding ElementName=tbCargoName, Path=ActualWidth}" Height="{Binding ElementName=tbCargoName, Path=ActualHeight}" Foreground="LightGray"
+                                    Visibility="{Binding ElementName=tbCargoName, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                                    Grid.Row="0" Grid.Column="0"   />
+                        <TextBox x:Name="tbCargoName" Background="Transparent" Margin="10,2" Width="225" TextWrapping="Wrap" Grid.Row="0" Grid.Column="0" TextChanged="tbCargoName_TextChanged"/>
+                        <Label x:Name="lWeight" Content="Вес                      т" Grid.Row="1" Grid.Column="0"/>
+                        <TextBox x:Name="tbWeight" Width="50" Margin="59,0" Grid.Row="1" Grid.Column="0" TextWrapping="NoWrap" Validation.ErrorTemplate="{StaticResource ErrorTempl}">
+                            <TextBox.Text>
+                                <Binding Path="weight" NotifyOnValidationError="True">
+                                    <Binding.ValidationRules>
+                                        <myns:WeightRule />
+                                        <ExceptionValidationRule/>
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
+
+                        <Label x:Name="lTafiff" Content="Тариф                 $/км" Grid.Row="2" Grid.Column="0"/>
+                        <TextBox x:Name="tbTariff" Grid.Row="2" Grid.Column="0" TextWrapping="NoWrap" 
+                                 Width="{Binding ElementName=tbWeight, Path=Width}" Margin="{Binding ElementName=tbWeight, Path=Margin}" 
+                                 Validation.ErrorTemplate="{StaticResource ErrorTempl}">
+                            <TextBox.Text>
+                                <Binding Path="cost" NotifyOnValidationError="True">
+                                    <Binding.ValidationRules>
+                                        <myns:PriceRule Max="9999"/>
+                                        <ExceptionValidationRule/>
+                                    </Binding.ValidationRules>
+                                    
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
+
                         <Button x:Name="bAddCargo" Template="{StaticResource ButtonTemplate}" Style="{StaticResource iconButton}" Click="bAddCargo_Click" Grid.Row="0" Grid.Column="1">
                             <Button.Content>
                                 <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\iconAdd.gif" Stretch="None"/>
@@ -214,7 +239,7 @@
                 </Button>
             </Grid>
         </TabItem>
-        <TabItem Header="Редактор операций">
+        <TabItem Header="Редактор операций" x:Name="tiEditOperation">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="45"/>

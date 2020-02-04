@@ -27,11 +27,32 @@ namespace Mannote.Pages
     {
         LogicEditor logicEditor;
 
+        public float weight { get; set; }
+        public float cost { get; set; }
+
         public ModelEditor()
         {
-            InitializeComponent();
+            InitializeComponent();         
+            SetUIElements();
+        }
+
+        private void SetUIElements()
+        {
+            if (!App.priveleges.EditOperations)
+            {
+                tiEditOperation.Visibility = Visibility.Collapsed;
+                tiEditOperation.Content = null;
+                tiFormTrain.IsSelected = true;
+            }
+            if (!App.priveleges.FormTrains)
+            {
+                tiFormTrain.Visibility = Visibility.Collapsed;
+                tiFormTrain.Content = null;
+                tiEditOperation.IsSelected = true;
+            }
             tbTime.Mask = "00:00:00";
             tbTime.ValueDataType = typeof(string);
+            gridCargoDetails.DataContext = this;
         }
 
         private void LightenRefreshButton()
@@ -104,7 +125,7 @@ namespace Mannote.Pages
 
         private void bProcess_Click(object sender, RoutedEventArgs e)
         {
-                Mouse.OverrideCursor = Cursors.AppStarting;
+            Mouse.OverrideCursor = Cursors.AppStarting;
             try
             {
                 int trainId = logicEditor.AddTrain(cbLocomotive.SelectedItem as Lokomotive, 
@@ -131,17 +152,20 @@ namespace Mannote.Pages
             {
                 float weight = float.Parse(tbWeight.Text);
                 decimal cost = decimal.Parse(tbTariff.Text);
+                if (tbCargoName.Text == "")
+                    throw new Exception("Введите название груза.");
                 lvCargo.Items.Add(logicEditor.AddCargo(tbCargoName.Text, weight, cost));
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            finally
-            {
                 tbWeight.Clear();
                 tbTariff.Clear();
                 tbCargoName.Clear();
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show("Неверно введены значения","Ошибка", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
         }
 
