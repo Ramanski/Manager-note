@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Mannote"
         mc:Ignorable="d"
         Title="Справка по операциям с поездом №" Width="300"
-        x:Name="wOper" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" WindowStyle="ToolWindow" ResizeMode="NoResize" SizeToContent="Height">
+        x:Name="wOper" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ResizeMode="NoResize" SizeToContent="Height">
     <StackPanel Margin="10">
         <TextBox x:Name="tbOperations" Margin="10" IsReadOnly="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
         <Button x:Name="OK" Content="OK" MaxWidth="100" Click="OK_Click"/>
