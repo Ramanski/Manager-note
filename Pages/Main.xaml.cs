@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static CodeFirst.Administration;
 
 namespace Mannote.Pages
 {
@@ -23,6 +24,8 @@ namespace Mannote.Pages
         public Main()
         {
             InitializeComponent();
+            if (App.user != null)
+                tbWelcome.Text = $"Добро пожаловать, {App.user.FirstName} {App.user.SurName}!";
         }
     }
 }

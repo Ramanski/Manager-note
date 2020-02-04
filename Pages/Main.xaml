@@ -5,10 +5,11 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Mannote.Pages"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Title="Main">
+      d:DesignHeight="450" d:DesignWidth="600"
+      Title="Main" FontSize="14">
 
-    <Grid>
-        <TextBlock Text="Добро пожаловать, {username}!" DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="10"/>
-    </Grid>
+    <StackPanel>
+        <TextBlock x:Name="tbWelcome" Text="Добро пожаловать!" DockPanel.Dock="Top" HorizontalAlignment="Center" FontSize="25" FontWeight="DemiBold" Foreground="Navy" Margin="10"/>
+        <Image x:Name="itrain" Source="C:\Users\Dondan\source\repos\Mannote\Resources\train.jpg"/>
+    </StackPanel>
 </Page>
