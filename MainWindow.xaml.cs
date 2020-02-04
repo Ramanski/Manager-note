@@ -17,7 +17,8 @@ namespace Mannote
     /// </summary>
     public partial class MainWindow : Window
     {
-        Page InfoPage;
+        Page InfoLokomotivesPage;
+        Page InfoTrainsPage;
         Page StatisticPage;
         Page MainPage;
         Page EditorPage;
@@ -35,8 +36,21 @@ namespace Mannote
 
         private void Info_Click(object sender, RoutedEventArgs e)
         {
-            if (InfoPage == null) InfoPage = new Info();
-            CurrentPage.Content = InfoPage;
+            switch ((sender as Button).Name)
+            {
+                case "bLokInfo":
+                {
+                    if (InfoLokomotivesPage == null) InfoLokomotivesPage = new Info("lokomotive");
+                    CurrentPage.Content = InfoLokomotivesPage;
+                }
+                break;
+                case "bTrainInfo":
+                {
+                    if (InfoTrainsPage == null) InfoTrainsPage = new Info("train");
+                    CurrentPage.Content = InfoTrainsPage;
+                }
+                break;
+            }
         }
 
         private void Statistic_Click(object sender, RoutedEventArgs e)
@@ -61,7 +75,7 @@ namespace Mannote
         private void About_Click(object sender, RoutedEventArgs e)
         {
             string about = "Блокнот руководителя - инструмент поддержки принятия решений для руководства дороги и должностных лиц предприятий железнодорожного транспорта.\n" +
-                           "Вопросы и замечания отправлять на почту 3romanski@gmail.com\n\n"+
+                           "Вопросы и замечания просьба отправлять на почту 3romanski@gmail.com\n\n"+
                            "\tВерсия 1.0 (февраль 2020)\n" +
                            "\tРазработчик - Роман Гривусевич\n";
             MessageBox.Show(about, "О программе", MessageBoxButton.OK);

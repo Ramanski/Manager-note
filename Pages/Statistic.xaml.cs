@@ -174,7 +174,7 @@ namespace Mannote
         private void dgValues_LoadingRow(object sender, DataGridRowEventArgs e)
         {
             StatisticValue sv = (StatisticValue)e.Row.DataContext;
-            if (sv.percentage < 100 && sv.percentage > 0)
+            if (sv.percentage < 1 && sv.percentage > 0)
                 e.Row.Background = Brushes.Gold;
             else e.Row.Background = Brushes.White;
         }

@@ -60,7 +60,7 @@
             </Style.Setters>
         </Style>
         <Style TargetType="ComboBox">
-            <Setter Property="Width" Value="150"></Setter>
+            <Setter Property="Width" Value="170"></Setter>
             <Setter Property="MaxHeight" Value="22"/>
         </Style>
         <Style TargetType="ComboBoxItem">

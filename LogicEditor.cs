@@ -240,6 +240,11 @@ namespace Mannote
             checkCodeSequence(selectedTrain.LastOperation.CodeId, code.CodeId);
             selectedTrain.Operations.Add(new Operation { Code = code, Date = dateTime });
             selectedTrain.LastOperation = code;
+            if (code.CodeId == 205)
+            {
+                selectedTrain.Lokomotive.Train = null;
+                selectedTrain.Lokomotive.Code = context.Codes.Where(c => c.CodeId == 1).SingleOrDefault();
+            }
             selectedTrain.Lokomotive.Code = code;
             TrySaveChanges(context);
             return new int[]{code.CodeId, selectedTrain.TrainId};

@@ -65,6 +65,7 @@ namespace Mannote
                     {
                         childnode.InnerText = (statisticValues.ElementAt(i++).plan * k).ToString();
                     }
+                    xDoc.Save(path);
                     return;
                 }
             }

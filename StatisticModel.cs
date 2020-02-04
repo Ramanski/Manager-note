@@ -133,7 +133,7 @@ namespace Mannote
                     StatisticValue statisticValue = statList.ElementAt(i);
                     statisticValue.plan = (planValues[i] / (DateTime.DaysInMonth(dtToTime.Year, dtToTime.Month))) * duration;
                     if (statisticValue.value != 0)
-                        statisticValue.percentage = (statisticValue.value / statisticValue.plan) * 100;
+                        statisticValue.percentage = (statisticValue.value / statisticValue.plan);
                 }
                 savePlanMode = pp.updatePlan;
                 return true;
