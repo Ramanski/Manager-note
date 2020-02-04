@@ -4,45 +4,42 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Mannote"
-        mc:Ignorable="d"
-        Title="Блокнот руководителя" Height="600" Width="810" ResizeMode="NoResize" Background="White" FontSize="16" Icon="Resources/notebook.ico" HorizontalContentAlignment="Center" HorizontalAlignment="Center" WindowStartupLocation="CenterScreen">
+        mc:Ignorable="d" x:Name="wMain"
+        Title="Блокнот руководителя" Height="600" Width="830" ResizeMode="CanResize" 
+        Background="White" FontSize="16" Icon="Resources/notebook.ico" WindowStartupLocation="CenterScreen">
     <Window.Resources>
-        <Style TargetType="{x:Type Hyperlink}">
+        <Style TargetType="Button">
             <Style.Setters>
-                <Setter Property="Foreground" Value="Black"/>
-                <Setter Property="TextDecorations" Value="{x:Null}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Background" Value="DarkBlue"/>
+                <Setter Property="Padding" Value="4"/>
             </Style.Setters>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Foreground" Value="Red"/>
+                    <Setter Property="FontWeight" Value="DemiBold"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    <DockPanel>
-        <StackPanel Orientation="Vertical" DockPanel.Dock="Left" Margin="5">
-            <Label><Hyperlink Click="Main_Click">Главная</Hyperlink></Label>
-            <TreeView BorderThickness="0">
-                <TreeViewItem Header="Ключевые показатели">
-                    <Hyperlink Click="Statistic_Click">Дорога</Hyperlink>
-                    <TreeViewItem Header="Минское отделение"/>
-                    <TreeViewItem Header="Барановичское отделение"/>
-                    <TreeViewItem Header="Брестское отделение"/>
-                    <TreeViewItem Header="Гомельское отделение"/>
-                    <TreeViewItem Header="Могилевское отделение"/>
-                    <TreeViewItem Header="Витебское отделение"/>
-                </TreeViewItem>
-            </TreeView>
-            <TreeView BorderThickness="0">
-                <TreeViewItem Header="Оперативная справка">
-                    <Hyperlink Click="Info_Click">Локомотив</Hyperlink>
-                    <Hyperlink Click="Info_Click">Поезд</Hyperlink>
-                </TreeViewItem>
-            </TreeView>
-            <Label><Hyperlink Click="Document_Click">Документы</Hyperlink></Label>
-            <Label><Hyperlink Click="ModelEditor_Click">Редактор модели</Hyperlink></Label>
-            <Label><Hyperlink>О программе</Hyperlink></Label>
-        </StackPanel>
-        <Frame x:Name="CurrentPage" NavigationUIVisibility="Hidden" Margin="5" Width="600" Content="{Binding}"/>
+    <DockPanel Background="AliceBlue">
+
+        <Grid DockPanel.Dock="Left" Background="RoyalBlue">
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Left" Margin="5">
+                <Button x:Name="bMain" Content="Главная" Click="Main_Click"/>
+                <Button x:Name="bStatistic" Content="Ключевые показатели" Click="Statistic_Click"/>
+                <Button Width="200">
+                    <Expander Header="Оперативная справка" Foreground="White" MouseEnter="Expander_MouseEnter" MouseLeave="Expander_MouseLeave"  >
+                        <StackPanel>
+                            <Button x:Name="bLokInfo" Content="Локомотив" Click="Info_Click"/>
+                            <Button x:Name="bTrainInfo" Content="Поезд" Click="Info_Click"/>
+                        </StackPanel>
+                    </Expander>
+                </Button>
+                <Button x:Name="bEditor" Content="Редактор модели" Click="ModelEditor_Click"/>
+                <Button x:Name="bAbout" Content="О программе" Click="About_Click"/>
+            </StackPanel>
+        </Grid>
+        <Frame x:Name="CurrentPage" NavigationUIVisibility="Hidden" Content="{Binding}"/>
     </DockPanel>
 </Window>

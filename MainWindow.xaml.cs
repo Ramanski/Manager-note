@@ -6,6 +6,9 @@ using System.Windows;
 using System.Configuration;
 using System.Windows.Controls;
 using Mannote.Pages;
+using System.Windows.Input;
+using System.Windows.Media;
+using static CodeFirst.Administration;
 
 namespace Mannote
 {
@@ -17,12 +20,15 @@ namespace Mannote
         Page InfoPage;
         Page StatisticPage;
         Page MainPage;
-        Page DocumentsPage;
         Page EditorPage;
 
         public MainWindow()
         {
             InitializeComponent();
+            Authorization authorization = new Authorization();
+            authorization.ShowDialog();
+            if (!App.priveleges.FormTrains && !App.priveleges.EditOperations) 
+                bEditor.Visibility = Visibility.Collapsed;
             MainPage = new Main();
             CurrentPage.Content = MainPage;
         }
@@ -35,14 +41,9 @@ namespace Mannote
 
         private void Statistic_Click(object sender, RoutedEventArgs e)
         {
-            if (StatisticPage == null) StatisticPage = new Statistic();
+            Mouse.OverrideCursor = Cursors.Wait;
+            if (StatisticPage == null) StatisticPage = new ModelStatistic();
             CurrentPage.Content = StatisticPage;
-        }
-
-        private void Document_Click(object sender, RoutedEventArgs e)
-        {
-            if (DocumentsPage == null) DocumentsPage = new Document();
-            CurrentPage.Content = DocumentsPage;
         }
 
         private void Main_Click(object sender, RoutedEventArgs e)
@@ -52,8 +53,28 @@ namespace Mannote
 
         private void ModelEditor_Click(object sender, RoutedEventArgs e)
         {
-            if (InfoPage == null) EditorPage = new ModelEditor();
+            Mouse.OverrideCursor = Cursors.Wait;
+            if (EditorPage == null) EditorPage = new ModelEditor();
             CurrentPage.Content = EditorPage;
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            string about = "Блокнот руководителя - инструмент поддержки принятия решений для руководства дороги и должностных лиц предприятий железнодорожного транспорта.\n" +
+                           "Вопросы и замечания отправлять на почту 3romanski@gmail.com\n\n"+
+                           "\tВерсия 1.0 (февраль 2020)\n" +
+                           "\tРазработчик - Роман Гривусевич\n";
+            MessageBox.Show(about, "О программе", MessageBoxButton.OK);
+        }
+
+        private void Expander_MouseEnter(object sender, MouseEventArgs e)
+        {
+            (sender as Expander).Foreground = Brushes.Red;
+        }
+
+        private void Expander_MouseLeave(object sender, MouseEventArgs e)
+        {
+            (sender as Expander).Foreground = Brushes.White;
         }
     }
 }
