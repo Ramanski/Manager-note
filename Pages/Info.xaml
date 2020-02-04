@@ -10,11 +10,13 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="45"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock Text="Info Page" Grid.Row="0" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FFF90505"/>
-        <DataGrid x:Name="dgTrainStatus" HorizontalAlignment="Left" Height="403" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="780"/>
-
+        <TextBlock Text="Оперативная справка" x:Name="tbViewName" Grid.Row="0" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        <Button x:Name="bRefresh" Margin="5" Background="Transparent" ToolTip="Обновить список" HorizontalAlignment="Right" Click="bRefresh_Click">
+            <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\database-search-icon.png" Stretch="Uniform"/>
+        </Button>
+        <DataGrid x:Name="dgStatus" Margin="10" Grid.Row="1" IsReadOnly="True" AutoGenerateColumns="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
     </Grid>
 </Page>

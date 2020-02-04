@@ -8,7 +8,6 @@ using System.Windows.Controls;
 using System.Data;
 using System.Data.SqlClient;
 using System.Configuration;
-using RailwayConnectedLayer;
 
 namespace Mannote
 {
@@ -17,24 +16,36 @@ namespace Mannote
     /// </summary>
     public partial class Info : Page
     {
-        DataTable uchTable;
+        string selectedView;
+        string viewName;
+        RailwayView rwView;
 
-        public Info()
+        public Info(string viewObject)
         {
             InitializeComponent();
-        }
-
-        public void RefreshTrainStatus()
-        {
-            RailwayDAL railwayDAL = new RailwayDAL();
-            railwayDAL.OpenConnection(ConfigurationManager.AppSettings["conStr"]);
-            dgTrainStatus.ItemsSource = railwayDAL.GetAllTrainsAsDataTable().DefaultView;
-            railwayDAL.CloseConnection();
+            switch (viewObject)
+            {
+                case "lokomotive": 
+                    selectedView = "LokomotivesStatus";
+                    viewName = "локомотивам";
+                    break;
+                case "train": 
+                    selectedView = "TrainsStatus";
+                    viewName = "поездам"; 
+                    break;
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            RefreshTrainStatus();
+            rwView = new RailwayView();
+            bRefresh_Click(null, null);
+        }
+
+        private void bRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            dgStatus.ItemsSource = rwView.GetViewTable(selectedView).DefaultView;
+            tbViewName.Text = $"Справка по {viewName} на {DateTime.Now.ToString("HH: mm: ss")}";
         }
     }
 }
