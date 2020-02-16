@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Mannote"
         mc:Ignorable="d" x:Name="wMain"
-        Title="Блокнот руководителя" Height="600" Width="830" ResizeMode="CanResize" 
+        Title="Блокнот руководителя" Height="600" Width="820" ResizeMode="CanResize" 
         Background="White" FontSize="16" Icon="Resources/notebook.ico" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style TargetType="Button">

@@ -167,7 +167,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Text=" Введите наименование груза..." Background="White"  Width="{Binding ElementName=tbCargoName, Path=ActualWidth}" Height="{Binding ElementName=tbCargoName, Path=ActualHeight}" Foreground="LightGray"
                                     Visibility="{Binding ElementName=tbCargoName, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}" 
-                                    Grid.Row="0" Grid.Column="0"   />
+                                    Grid.Row="0" Grid.Column="0" />
                         <TextBox x:Name="tbCargoName" Background="Transparent" Margin="10,2" Width="225" TextWrapping="Wrap" Grid.Row="0" Grid.Column="0" TextChanged="tbCargoName_TextChanged"/>
                         <Label x:Name="lWeight" Content="Вес                      т" Grid.Row="1" Grid.Column="0"/>
                         <TextBox x:Name="tbWeight" Width="50" Margin="59,0" Grid.Row="1" Grid.Column="0" TextWrapping="NoWrap" Validation.ErrorTemplate="{StaticResource ErrorTempl}">
@@ -243,7 +243,7 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="45"/>
-                    <RowDefinition Height="1.2*"/>
+                    <RowDefinition Height="180"/>
                     <RowDefinition Height="45"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>

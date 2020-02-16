@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 
 namespace Mannote
 {
-    public class RailwayView
+    public class RailwayDBConnector
     {
         SqlConnection connect = null;
         string connectionString;
 
-        public RailwayView()
+        public RailwayDBConnector()
         {
             connectionString = ConfigurationManager.AppSettings["conStr"];
         }
@@ -26,7 +22,7 @@ namespace Mannote
                 OpenConnection(connectionString);
                 return GetAllObjectsAsDataTable(viewTableName);
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 return null;
             }

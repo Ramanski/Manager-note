@@ -10,7 +10,7 @@ namespace Mannote
     class StatisticModel
     {
         SampleContext context;
-        PlansPeeker pp;
+        PlansPeeker planPeeker;
         List <IncomeParams> sampleValues;
         DateTime dtFromTime { get; set; }
         DateTime dtToTime { get; set; }
@@ -34,6 +34,7 @@ namespace Mannote
             return statList;
         }
 
+        // Определение периода для отчета
         public void SetNewPeriod(DateTime dtFromTime, DateTime dtToTime)
         {
             if (dtFromTime >= dtToTime)
@@ -42,14 +43,18 @@ namespace Mannote
             this.dtToTime = dtToTime;
         }
 
+        // Получение исходных значений для расчета показателей
         private List<IncomeParams> GetSampleValues(int department)
         {
+            // Выборка расформированных поездов за отчетный период
             var trainsPeriod = context.Trains.Where(t => (t.Operations.OrderByDescending(o => o.OperationId).FirstOrDefault().Date >= this.dtFromTime 
                                               && t.Operations.OrderByDescending(o => o.OperationId).FirstOrDefault().Date < this.dtToTime))
                                              .Where(t => t.Operations.OrderByDescending(o => o.OperationId).FirstOrDefault().Code.CodeId == 205
                                              );
             if (department != 0)
+            // Выборка по конкретному отделению
                 trainsPeriod = trainsPeriod.Where(t => t.Path.DepartureStation.Department == department);
+            // Формирование объектов из выборки значений для расчета
             var DepartmentStat = trainsPeriod.Select(t => new
                                              {
                                                  aWeight = t.Weight,
@@ -72,6 +77,7 @@ namespace Mannote
             return DepartmentStat;
         }
 
+        // Расчет грузооборота
         private float GetPL()
         {
             float pl = 0;
@@ -82,17 +88,20 @@ namespace Mannote
             return pl;
         }
 
+        // Расчет веса перевезенных грузов
         private float GetSumP()
         {
             return sampleValues.Select(s => s.weight).Sum();
         }
 
+        // Расчет среднего веса поезда
         private float GetAverageTrainWeight()
         {
             if (sampleValues.Count() == 0) return 0;
             return sampleValues.Select(t => t.weight).Average();
         }
 
+        // Расчет средней скорости поездов
         private float GetAverageTrainSpeed()
         {
             foreach(IncomeParams values in sampleValues)
@@ -103,6 +112,7 @@ namespace Mannote
             return sampleValues.Select(s => s.speed).Average();
         }
 
+        // Расчет кол-ва груженых поездов
         private float GetCargoTrainsCount()
         {
             return sampleValues.Where(v => v.weight != 0).Count();
@@ -115,18 +125,20 @@ namespace Mannote
             return sampleValues.Select(s => s.distance).Sum() / lokCount;
         }
 
+        // Поиск и расчет плановых значений
         public bool SetPlanValues()
         {
             if (statList == null)
                 throw new Exception("Плановые показатели не могут быть рассчитаны до определения фактических значений");
+            // Период выходит за рамки одного отчетного месяца
             if (dtFromTime.AddDays(1).Month != dtToTime.Month && dtFromTime.Year != dtToTime.Year)
                 return false;
-            pp = new PlansPeeker();
-            int duration = (dtToTime - dtFromTime).Days;
+            planPeeker = new PlansPeeker();
             try
             {
-                float[] planValues = pp.getPlan(dtToTime);
+                float[] planValues = planPeeker.getPlan(dtToTime);
 
+                int duration = (dtToTime - dtFromTime).Days;
 
                 for (int i = 0; i < statList.Count; i++)
                 {
@@ -135,19 +147,19 @@ namespace Mannote
                     if (statisticValue.value != 0)
                         statisticValue.percentage = (statisticValue.value / statisticValue.plan);
                 }
-                savePlanMode = pp.updatePlan;
+                savePlanMode = planPeeker.updatePlan;
                 return true;
             }
             catch(ArgumentException ex)
             {
-                savePlanMode = pp.addPlan;
+                savePlanMode = planPeeker.addPlan;
                 throw ex;
             }
         }
 
         public void SavePlanValues()
         {
-            if (pp == null) pp = new PlansPeeker();
+            if (planPeeker == null) planPeeker = new PlansPeeker();
             double k = DateTime.DaysInMonth(dtToTime.Year, dtToTime.Month) / (dtToTime - dtFromTime).Days;
             savePlanMode.Invoke(statList, dtToTime, k);
         }
@@ -160,7 +172,7 @@ namespace Mannote
             statList.Add(new StatisticValue("в т.ч. груженых", GetCargoTrainsCount()));
             statList.Add(new StatisticValue("Грузооборот эксплуатационный, т-км", GetPL()));
             statList.Add(new StatisticValue("Перевезено грузов, т", GetSumP()));
-            statList.Add(new StatisticValue("Участковая скорость, км/ч", GetAverageTrainSpeed()));
+            statList.Add(new StatisticValue("Маршрутная скорость, км/ч", GetAverageTrainSpeed()));
             StatisticValue averageWeight = new StatisticValue("Средний вес поезда, т", GetAverageTrainWeight());
             statList.Add(averageWeight);
             StatisticValue sl = new StatisticValue("Среднесуточный пробег локомотива, км", GetSL());

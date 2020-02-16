@@ -12,6 +12,7 @@ namespace Mannote
     {
         // Создать объект контекста
         private SampleContext context;
+        // Список прикрепленных грузов
         private List<Cargo> cargoes = new List<Cargo>();
         public int powerKind { get; set; }
         public int trainType { get; set; }
@@ -32,6 +33,7 @@ namespace Mannote
             context.Database.Log = (s => System.Diagnostics.Debug.WriteLine(s));
         }
 
+        // Получение пути по выбранным станциями
         private Path FindPath(Station DepartureStation, Station ArrivalStation)
         {
             string ErrorText = "Произошла непредвиденная ситуация";
@@ -59,6 +61,8 @@ namespace Mannote
             return null;
         }
 
+        // Обработка параметров грузов
+        // Определение суммарного веса
         private float ProcessCargoes(Train train)
         {
             float Weight = 0;
@@ -96,9 +100,9 @@ namespace Mannote
             }
         }
 
+        // Запрос свободных локомотивов со статусом "брошен" или "прибыл"
         public List<Lokomotive> LoadFreeLokomotives()
         {
-            //Запрос свободных локомотивов со статусом "брошен" или "прибыл"
             var freeLokomotives = context.Lokomotives
                                      .Where(l => (l.Train == null) &&
                                             l.PowerKind.PowerKindId == powerKind &&
@@ -106,17 +110,19 @@ namespace Mannote
             return freeLokomotives.ToList();
         }
 
+        // Запрос всех станций в алфавитном порядке
         public List<Station> LoadStations()
         {
-            //Запрос всех станций в алфавитном порядке
             return context.Stations.OrderBy(s => s.Name).ToList();
         }
 
-        public List<Code> LoadCodes()
+        // Запрос всех доступных кодов операций (>=200)
+        public List<Code> LoadCodesForOperations()
         {
             return context.Codes.Where(c=>c.CodeId >= 200).ToList();
         }
 
+        // Формирование поезда
         public int AddTrain(Lokomotive lok, Station DepartureStation, Station ArrivalStation)
         {
             Train train = new Train
@@ -167,10 +173,13 @@ namespace Mannote
             {
                 throw ex;
             }
+
+            cargoes = new List<Cargo>();
             
             return train.TrainId;
         }
 
+        // Добавление груза в список прикрепленных грузов
         public Cargo AddCargo(string name, float weight, decimal cost)
         {
             Cargo cargo = new Cargo(name, weight, cost);
@@ -178,27 +187,29 @@ namespace Mannote
             return cargo;
         }
 
+        // Удаление груза из списка прикрепленных грузов
         public void DelCargo(int index)
         {
             try
             {
                 cargoes.RemoveAt(index);
             }
-            catch(ArgumentNullException e)
+            catch(ArgumentOutOfRangeException e)
             {
                 throw e;
             }
             return;
         }
 
+        // Очистка списка прикрепленных грузов
         public void ClearCargos()
         {
             cargoes.Clear();
         }
 
+        // Выборка сведений по поездам для совершения операции 
         public List<OperationsView> LoadActualTrains()
         {
-            //Выборка сведений по всем поездам
            var actualTrains = context.Trains
                                     .Select(t => new
                                     {
@@ -220,77 +231,97 @@ namespace Mannote
             return actualTrains.ToList(); 
         }
 
-        private void checkCodeSequence(int prevCode, int curCode)
+        // Контроль последовательности добавляемой операции
+        private void СheckCodeSequence(int prevCode, int curCode)
         {
             if (prevCode == curCode)
                     throw new Exception($"Данная операция ({prevCode}) уже была произведена");
+            // Один из кодов операций - "брошен"
             if (curCode == 204 || prevCode == 204)
                 return;
+            // Входит в последовательность "сформирован" -> "отправлен"  -> "прибыл"  -> "расформирован"
             if ((prevCode == 9 && curCode == 200) || (prevCode == 200 && curCode == 201) || (prevCode == 201 && curCode == 205))
                 return;
             throw new Exception($"Нарушение логической последовательности операций: {prevCode} -> {curCode}") ;
         }
 
+        // Совершение операции с поездом или локомотивом
+        // При успехе выдается код операции и индекс поезда
         public int[] AddOperation(OperationsView selectedView, Code code, DateTime dateTime)
         {
+            // Подтягивание информации по выбранному поезду
             Train selectedTrain = context.Trains.Where(t => t.TrainId == selectedView.trainId)
                                                 .Include(t=>t.LastOperation)
                                                 .Include(t=>t.Lokomotive)
                                                 .SingleOrDefault();
-            checkCodeSequence(selectedTrain.LastOperation.CodeId, code.CodeId);
+            // Проверка последовательности операций
+            СheckCodeSequence(selectedTrain.LastOperation.CodeId, code.CodeId);
             selectedTrain.Operations.Add(new Operation { Code = code, Date = dateTime });
             selectedTrain.LastOperation = code;
+            // При расформировании локомотив освобождается от поезда
             if (code.CodeId == 205)
             {
                 selectedTrain.Lokomotive.Train = null;
+                // Присвоение статуса "свободен"
                 selectedTrain.Lokomotive.Code = context.Codes.Where(c => c.CodeId == 1).SingleOrDefault();
             }
-            selectedTrain.Lokomotive.Code = code;
+            else selectedTrain.Lokomotive.Code = code;
             TrySaveChanges(context);
             return new int[]{code.CodeId, selectedTrain.TrainId};
         }
 
+        // Удаление поезда и связанных с ним данных из БД
         public int DelTrain(OperationsView selectedView)
         {
+            // Подтягивание информации по выбранному поезду
             Train selectedTrain = context.Trains
                                          .Where(t => t.TrainId == selectedView.trainId)
                                          .Include(t=>t.Lokomotive)
                                          .SingleOrDefault();
-            //Отвязать локомотив от поезда
+            // Отвязать локомотив от поезда
             selectedTrain.Lokomotive.Train = null;
+            // Локомотив получает статус "брошен"
             selectedTrain.Lokomotive.Code = context.Codes.Where(c => c.CodeId == 204).First();
             context.Trains.Remove(selectedTrain);
             TrySaveChanges(context);
             return selectedTrain.TrainId;
         }
-        
+
+        // Отмена последней операции с поездом
+        // При успехе выдается код операции и индекс поезда
         public int[] CancelOperation(OperationsView selectedView)
         {
+            // Подтягивание информации по выбранному поезду
             Train selectedTrain = context.Trains
                                          .Where(t => t.TrainId == selectedView.trainId)
                                          .Include(t => t.Lokomotive)
                                          .SingleOrDefault();
-            List<Operation> operations = getOperations(selectedView);
+            List<Operation> operations = getOperations(selectedTrain.TrainId);
             if (operations == null)
             {
                 throw new ArgumentNullException("Не найдено ни одной операции с поездом.");
             }
             else if (operations.Count == 1)
             {
+                // Отмена единственной операции ("сформирован") равнозначно удалению поезда
                 throw new ArgumentException();
             }
             int[] opInfo = { operations.Last().Code.CodeId, selectedTrain.TrainId };
             Operation deleteOperation = operations.Last();
             context.Operations.Remove(deleteOperation);
             operations.Remove(deleteOperation);
+            // Теперь последняя операция - бывшая предпоследняя
+            // Дублирование нового кода в статусе локомотива
             selectedTrain.Lokomotive.Code = operations.Last().Code;
             selectedTrain.LastOperation = operations.Last().Code;
             TrySaveChanges(context);
             return opInfo;
         }
 
+        // Обновление времени совершения текущей операции
         public int UpdateOperation(OperationsView selectedView, DateTime dateTime)
         {
+            // Подтягивание информации по выбранному поезду
             Train selectedTrain = context.Trains
                                          .Where(t => t.TrainId == selectedView.trainId)
                                          .Include(t=>t.Operations)
@@ -300,11 +331,13 @@ namespace Mannote
             return selectedTrain.TrainId;
         }
 
-        public List<Operation> getOperations(OperationsView selectedView)
+        // Выдача списка операций по индексу поезда
+        public List<Operation> getOperations(int trainId)
         {
-            return context.Trains.Where(t => t.TrainId == selectedView.trainId).Select(t => t.Operations).Single();
+            return context.Trains.Where(t => t.TrainId == trainId).Select(t => t.Operations).Single();
         }
 
+        // Определение индекса выбранного из списка поезда
         public int getTrainId(OperationsView selectedView)
         {
             return selectedView.trainId;

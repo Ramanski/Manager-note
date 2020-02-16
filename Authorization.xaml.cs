@@ -1,16 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using CodeFirst;
 
 namespace Mannote
@@ -20,8 +10,11 @@ namespace Mannote
     /// </summary>
     public partial class Authorization : Window
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         public Authorization()
         {
+            logger.Debug("Запуск авторизации пользователя");
             InitializeComponent();
             tbLogin.Focus();
         }
@@ -34,6 +27,7 @@ namespace Mannote
                 EditPlans = false,
                 FormTrains = false
             };
+            logger.Info("Пользователь вошел в систему как гость");
             this.Close();
         }
 
@@ -41,9 +35,13 @@ namespace Mannote
         {
             Mouse.OverrideCursor = Cursors.AppStarting;
             AdminContext adminContext = new AdminContext();
+            logger.Debug("Поиск введенных логина и пароля в БД");
             var LogPerson = adminContext.Logins.Where(l => l.login.Equals(tbLogin.Text));
             if (!LogPerson.Any())
+            {
                 MessageBox.Show("Не найдено пользователя с таким логином");
+                logger.Info($"В БД не найдено пользователя с логином \"{tbLogin.Text}\"");
+            }
             else
             {
                 if (LogPerson.SingleOrDefault().password.Equals(pbPassword.Password))
@@ -52,11 +50,13 @@ namespace Mannote
                     App.user = user;
                     App.priveleges = user.post.privelege;
                     Mouse.OverrideCursor = Cursors.Arrow;
+                    logger.Info($"Пользователь под Id №{user.PersonId} в должности {user.post.Name} вошел в систему");
                     this.Close();
                 }
                 else
                 {
                     Mouse.OverrideCursor = Cursors.Arrow;
+                    logger.Info("Введен неверный пароль");
                     MessageBox.Show("Неверный пароль");
                 } 
             }

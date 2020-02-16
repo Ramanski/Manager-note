@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Data;
-using System.Data.SqlClient;
-using System.Configuration;
 
 namespace Mannote
 {
@@ -18,7 +11,7 @@ namespace Mannote
     {
         string selectedView;
         string viewName;
-        RailwayView rwView;
+        RailwayDBConnector rwView;
 
         public Info(string viewObject)
         {
@@ -38,7 +31,7 @@ namespace Mannote
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            rwView = new RailwayView();
+            rwView = new RailwayDBConnector();
             bRefresh_Click(null, null);
         }
 

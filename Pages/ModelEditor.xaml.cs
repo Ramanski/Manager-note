@@ -1,41 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using RailwayConnectedLayer;
-using System.Configuration;
 using CodeFirst;
-using System.Data.Entity;
 using System.Globalization;
 
 namespace Mannote.Pages
 {
-    /// <summary>
-    /// Interaction logic for ModelEditor.xaml
-    /// </summary>
     public partial class ModelEditor : Page
     {
         LogicEditor logicEditor;
 
         public float weight { get; set; }
         public float cost { get; set; }
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 
         public ModelEditor()
         {
+            Mouse.OverrideCursor = Cursors.Wait;
             InitializeComponent();         
             SetUIElements();
+            Mouse.OverrideCursor = Cursors.Arrow;
         }
 
+        // Первоначальная установка элементов
         private void SetUIElements()
         {
             if (!App.priveleges.EditOperations)
@@ -43,18 +34,23 @@ namespace Mannote.Pages
                 tiEditOperation.Visibility = Visibility.Collapsed;
                 tiEditOperation.Content = null;
                 tiFormTrain.IsSelected = true;
+                logger.Info("Скрыта вкладка редактирования операций");
             }
             if (!App.priveleges.FormTrains)
             {
                 tiFormTrain.Visibility = Visibility.Collapsed;
                 tiFormTrain.Content = null;
                 tiEditOperation.IsSelected = true;
+                logger.Info("Скрыта вкладка формирования поездов");
             }
             tbTime.Mask = "00:00:00";
+            tbWeight.Text = ".0";
+            tbTariff.Text = ".0";
             tbTime.ValueDataType = typeof(string);
             gridCargoDetails.DataContext = this;
         }
 
+        // Подсветка кнопки обновления списка
         private void LightenRefreshButton()
         {
             bRefresh.Background = Brushes.LightCoral;
@@ -66,12 +62,14 @@ namespace Mannote.Pages
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
+            Mouse.OverrideCursor = Cursors.AppStarting;
             try
             {
                 logicEditor = new LogicEditor();
             }
             catch(Exception)
             {
+                logger.Error("Ошибка при создании объекта логической модели");
                 MessageBox.Show("Произошла непредвиденная ситуация.", "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
                 Mouse.OverrideCursor = Cursors.Arrow;
                 return;
@@ -84,6 +82,7 @@ namespace Mannote.Pages
             LightenRefreshButton();
         }
 
+        // Установка первоначальных параметров элементов
         private void SetParameters()
         {
             logicEditor.trainType = 2;
@@ -97,6 +96,7 @@ namespace Mannote.Pages
             rbFuel.Checked += (s,e) => rbPower_Checked(s, e);
         }
 
+        // Привязка локомотивов к ComboBox
         private void BindLokomotives()
         {
             List<Lokomotive> lok = logicEditor.LoadFreeLokomotives();
@@ -106,6 +106,7 @@ namespace Mannote.Pages
             cbLocomotive.SelectedIndex = 0;
         }
 
+        // Привязка станций к ComboBox
         private void BindStations()
         {
                 var stations = logicEditor.LoadStations();
@@ -115,11 +116,12 @@ namespace Mannote.Pages
                 cbDepartureStation.ItemsSource = stations;
                 cbArrivalStation.SelectedIndex = 0;
                 cbDepartureStation.SelectedIndex = 1;
-        } 
-        
+        }
+
+        // Привязка кодов операций к ComboBox
         private void BindCodes()
         {
-            cbCodes.ItemsSource = logicEditor.LoadCodes();
+            cbCodes.ItemsSource = logicEditor.LoadCodesForOperations();
             cbCodes.SelectedIndex = 0;
         }
 
@@ -137,6 +139,7 @@ namespace Mannote.Pages
             }
             catch (Exception ex)
             {
+                logger.Warn("Не удалось сформировать поезд");
                 MessageBox.Show(ex.Message, "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -146,6 +149,7 @@ namespace Mannote.Pages
 
         }
 
+        // Добавление груза в список
         private void bAddCargo_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -155,13 +159,13 @@ namespace Mannote.Pages
                 if (tbCargoName.Text == "")
                     throw new Exception("Введите название груза.");
                 lvCargo.Items.Add(logicEditor.AddCargo(tbCargoName.Text, weight, cost));
-                tbWeight.Clear();
-                tbTariff.Clear();
+                tbWeight.Text = "0.0";
+                tbTariff.Text = "0.0";
                 tbCargoName.Clear();
             }
             catch (FormatException)
             {
-                MessageBox.Show("Неверно введены значения","Ошибка", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show("Введены некорректные значения","Ошибка", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
             catch (Exception ex)
             {
@@ -169,6 +173,7 @@ namespace Mannote.Pages
             }
         }
 
+        // Удаление груза из списка
         private void bDelCargo_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -176,12 +181,13 @@ namespace Mannote.Pages
                 logicEditor.DelCargo(lvCargo.SelectedIndex);
                 lvCargo.Items.RemoveAt(lvCargo.SelectedIndex);
             }
-            catch(ArgumentNullException)
+            catch(ArgumentOutOfRangeException)
             {
                 MessageBox.Show("Не выбран элемент для удаления", "Будьте внимательней :)", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
         }
 
+        // Очистка списка от грузов
         private void bClearCargo_Click(object sender, RoutedEventArgs e)
         {
             logicEditor.ClearCargos();
@@ -222,6 +228,7 @@ namespace Mannote.Pages
             BindLokomotives();
         }
 
+        // Видимость маски "Введите наименование груза..."
         private void tbCargoName_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (tbCargoName.Text == "")
@@ -229,6 +236,7 @@ namespace Mannote.Pages
             else tbCargoName.Background = new SolidColorBrush(Colors.White);
         }
 
+        // Обновление списка поездов
         private void bRefresh_Click(object sender, RoutedEventArgs e)
         {
             lvTrains.ItemsSource = logicEditor.LoadActualTrains();
@@ -239,6 +247,7 @@ namespace Mannote.Pages
             bRefresh.ToolTip = toolTip;
         }
 
+        // Смена направления (станций отправления и назначения)
         private void bSwitch_Click(object sender, RoutedEventArgs e)
         {
             int sta1 = cbDepartureStation.SelectedIndex;
@@ -252,7 +261,7 @@ namespace Mannote.Pages
             {
                 List<int> trainIds = new List<int>();
                 foreach (object selectedTrain in lvTrains.SelectedItems)
-                trainIds.Add(logicEditor.DelTrain((OperationsView)selectedTrain));
+                    trainIds.Add(logicEditor.DelTrain((OperationsView)selectedTrain));
                 MessageBox.Show(String.Format("Поезд(а) №{0} успешно удалены!", String.Join(",", trainIds)), "Ответ БД", MessageBoxButton.OK, MessageBoxImage.Information);
                 lvTrains.SelectedItems.Clear();
                 LightenRefreshButton();
@@ -289,7 +298,8 @@ namespace Mannote.Pages
         {
             try
             {
-                OperationsInfo op = new OperationsInfo(logicEditor.getTrainId((OperationsView)lvTrains.SelectedItem), logicEditor.getOperations((OperationsView)lvTrains.SelectedItem));
+                int trainId = logicEditor.getTrainId((OperationsView)lvTrains.SelectedItem);
+                OperationsInfo op = new OperationsInfo(trainId, logicEditor.getOperations(trainId));
                 op.ShowDialog();
                 lvTrains.SelectedItem = null;
             }
@@ -325,6 +335,7 @@ namespace Mannote.Pages
 
         }
 
+        // 
         private void bUpdateOperation_Click(object sender, RoutedEventArgs e)
         {
             DateTime dateTime;
@@ -350,6 +361,7 @@ namespace Mannote.Pages
             }
         }
 
+        // Обработка блока Заменить время
         private DateTime ParseDateTime()
         {
             DateTime dateTime = new DateTime();
