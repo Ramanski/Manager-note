@@ -160,7 +160,8 @@ namespace Mannote
         public void SavePlanValues()
         {
             if (planPeeker == null) planPeeker = new PlansPeeker();
-            double k = DateTime.DaysInMonth(dtToTime.Year, dtToTime.Month) / (dtToTime - dtFromTime).Days;
+            double k = (double)DateTime.DaysInMonth(dtToTime.Year, dtToTime.Month) / (dtToTime - dtFromTime).Days;
+                //DateTime.DaysInMonth(dtToTime.Year, dtToTime.Month) / (dtToTime - dtFromTime).Days;
             savePlanMode.Invoke(statList, dtToTime, k);
         }
 
