@@ -120,15 +120,15 @@
                         <TextBlock Style="{StaticResource gbTextBlock}">Путь</TextBlock>
                     </GroupBox.Header>
                     <WrapPanel Orientation="Horizontal">
-                        <Label x:Name="lDeparture" Content="Отправление" HorizontalAlignment="Left" Width="Auto" Margin="5,0"/>
-                        <ComboBox x:Name="cbDepartureStation" HorizontalAlignment="Right"/>
+                        <Label x:Name="lDeparture" Content="Отправление" Width="Auto" Margin="5,0"/>
+                        <ComboBox x:Name="cbDepartureStation"/>
                         <Button x:Name="bSwitch" Cursor="Hand" Margin="15,0" Width="25" Height="25" Click="bSwitch_Click">
                             <Button.Content>
                                 <Image Source="C:\Users\Dondan\source\repos\Mannote\Resources\switch-icon.png"/>
                             </Button.Content>
                         </Button>
-                        <Label x:Name="lArrival" Content="Прибытие" HorizontalAlignment="Left" Margin="0" Width="Auto"/>
-                        <ComboBox x:Name="cbArrivalStation" HorizontalAlignment="Right" Grid.Row="0" Grid.Column="1"/>
+                        <Label x:Name="lArrival" Content="Прибытие" Margin="0" Width="Auto"/>
+                        <ComboBox x:Name="cbArrivalStation" Grid.Row="0" Grid.Column="1"/>
                     </WrapPanel>
                 </GroupBox>
                 <GroupBox x:Name="gbTypeTrain" Grid.Row="1" Grid.Column="0">
@@ -155,17 +155,17 @@
                     </GroupBox.Header>
                     <Grid x:Name="gridCargoDetails">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="37"/>
-                            <RowDefinition Height="37"/>
-                            <RowDefinition Height="37"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="37*"/>
+                            <RowDefinition Height="37*"/>
+                            <RowDefinition Height="37*"/>
+                            <RowDefinition Height="100*"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="255*" x:Name="cargoParameters"/>
-                            <ColumnDefinition Width="37" x:Name="cargoEdit"/>
+                            <ColumnDefinition Width="37*" x:Name="cargoEdit"/>
                             <ColumnDefinition Width="296*" x:Name="cargoView"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text=" Введите наименование груза..." Background="White"  Width="{Binding ElementName=tbCargoName, Path=ActualWidth}" Height="{Binding ElementName=tbCargoName, Path=ActualHeight}" Foreground="LightGray"
+                        <TextBlock Text=" Введите наименование груза..." Background="White" HorizontalAlignment="Left" Margin="10,2"  Width="{Binding ElementName=tbCargoName, Path=ActualWidth}" Height="{Binding ElementName=tbCargoName, Path=ActualHeight}" Foreground="LightGray"
                                     Visibility="{Binding ElementName=tbCargoName, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}" 
                                     Grid.Row="0" Grid.Column="0" />
                         <TextBox x:Name="tbCargoName" Background="Transparent" Margin="10,2" Width="225" TextWrapping="Wrap" Grid.Row="0" Grid.Column="0" TextChanged="tbCargoName_TextChanged"/>

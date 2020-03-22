@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -76,11 +77,11 @@ namespace Mannote
         }
 
         // Сохранить изменения в БД
-        public void TrySaveChanges(SampleContext context)
+        public async Task TrySaveChanges(SampleContext context)
         {
             try
             {
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
             catch (System.Data.Entity.Infrastructure.DbUpdateException)
             {
@@ -101,25 +102,25 @@ namespace Mannote
         }
 
         // Запрос свободных локомотивов со статусом "брошен" или "прибыл"
-        public List<Lokomotive> LoadFreeLokomotives()
+        public async Task<List<Lokomotive>> LoadFreeLokomotives()
         {
             var freeLokomotives = context.Lokomotives
                                      .Where(l => (l.Train == null) &&
                                             l.PowerKind.PowerKindId == powerKind &&
                                             l.TrainType.TrainTypeId == trainType);
-            return freeLokomotives.ToList();
+            return await freeLokomotives.ToListAsync();
         }
 
         // Запрос всех станций в алфавитном порядке
-        public List<Station> LoadStations()
+        public async Task<List<Station>> LoadStations()
         {
-            return context.Stations.OrderBy(s => s.Name).ToList();
+            return await context.Stations.OrderBy(s => s.Name).ToListAsync();
         }
 
         // Запрос всех доступных кодов операций (>=200)
-        public List<Code> LoadCodesForOperations()
+        public async Task<IEnumerable<Code>> LoadCodesForOperations()
         {
-            return context.Codes.Where(c=>c.CodeId >= 200).ToList();
+            return await context.Codes.Where(c=>c.CodeId >= 200).ToListAsync();
         }
 
         // Формирование поезда
@@ -167,7 +168,7 @@ namespace Mannote
 
             try
             {
-                TrySaveChanges(context);
+                Task.Run(() => TrySaveChanges(context));
             }
             catch (Exception ex)
             {
@@ -266,7 +267,7 @@ namespace Mannote
                 selectedTrain.Lokomotive.Code = context.Codes.Where(c => c.CodeId == 1).SingleOrDefault();
             }
             else selectedTrain.Lokomotive.Code = code;
-            TrySaveChanges(context);
+            Task.Run(() => TrySaveChanges(context));
             return new int[]{code.CodeId, selectedTrain.TrainId};
         }
 
@@ -283,7 +284,7 @@ namespace Mannote
             // Локомотив получает статус "брошен"
             selectedTrain.Lokomotive.Code = context.Codes.Where(c => c.CodeId == 204).First();
             context.Trains.Remove(selectedTrain);
-            TrySaveChanges(context);
+            Task.Run(() => TrySaveChanges(context));
             return selectedTrain.TrainId;
         }
 
@@ -314,7 +315,7 @@ namespace Mannote
             // Дублирование нового кода в статусе локомотива
             selectedTrain.Lokomotive.Code = operations.Last().Code;
             selectedTrain.LastOperation = operations.Last().Code;
-            TrySaveChanges(context);
+            Task.Run(() => TrySaveChanges(context));
             return opInfo;
         }
 
@@ -327,7 +328,7 @@ namespace Mannote
                                          .Include(t=>t.Operations)
                                          .SingleOrDefault();
             selectedTrain.Operations.Last().Date = dateTime;
-            TrySaveChanges(context);
+            Task.Run(() => TrySaveChanges(context));
             return selectedTrain.TrainId;
         }
 

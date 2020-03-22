@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using CodeFirst;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace Mannote.Pages
 {
@@ -97,19 +98,20 @@ namespace Mannote.Pages
         }
 
         // Привязка локомотивов к ComboBox
-        private void BindLokomotives()
+        private async void BindLokomotives()
         {
-            List<Lokomotive> lok = logicEditor.LoadFreeLokomotives();
-            if (lok.Count == 0)
-                MessageBox.Show("Нет свободных локомотивов выбранного типа!", "К сведению", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            cbLocomotive.ItemsSource = lok;
-            cbLocomotive.SelectedIndex = 0;
+                List<Lokomotive> lok = await logicEditor.LoadFreeLokomotives();
+                if (lok.Count == 0)
+                    MessageBox.Show("Нет свободных локомотивов выбранного типа!", "К сведению", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                cbLocomotive.ItemsSource = lok;
+                cbLocomotive.SelectedIndex = 0;
+
         }
 
         // Привязка станций к ComboBox
-        private void BindStations()
+        private async void BindStations()
         {
-                var stations = logicEditor.LoadStations();
+                var stations = await logicEditor.LoadStations();
                 //Присоединение станций прибытия к combobox
                 cbArrivalStation.ItemsSource = stations;
                 //Присоединение станций отправления к combobox
@@ -119,9 +121,9 @@ namespace Mannote.Pages
         }
 
         // Привязка кодов операций к ComboBox
-        private void BindCodes()
+        private async void BindCodes()
         {
-            cbCodes.ItemsSource = logicEditor.LoadCodesForOperations();
+            cbCodes.ItemsSource = await logicEditor.LoadCodesForOperations();
             cbCodes.SelectedIndex = 0;
         }
 
@@ -135,7 +137,7 @@ namespace Mannote.Pages
                                                    cbArrivalStation.SelectedItem as Station);
                 MessageBox.Show(String.Format("Поезд №{0} успешно сформирован!", trainId), "Ответ БД", MessageBoxButton.OK, MessageBoxImage.Information);
                 bClearCargo_Click(null, null);
-                BindLokomotives();
+                Task.Run (() => BindLokomotives());
             }
             catch (Exception ex)
             {
